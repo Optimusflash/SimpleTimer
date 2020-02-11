@@ -1,5 +1,6 @@
 package com.optimus.simpletimer
 
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -11,7 +12,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), TimerDialogFragment.OnFragmentInteractionListener {
 
     private var startValue = 0
     private val disposeBag = CompositeDisposable()
@@ -20,25 +21,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        with(np_hours) {
-            minValue = 0
-            maxValue = 99
-        }
-        with(np_minutes) {
-            minValue = 0
-            maxValue = 59
-        }
-        with(np_seconds) {
-            minValue = 0
-            maxValue = 59
-        }
+
 
         progress_bar.visibility = View.GONE
 
-        np_hours.setOnValueChangedListener { picker, oldVal, newVal ->
-            tv_timer_value.text = newVal.toString()
-            startValue = newVal
-            progress_bar.max = newVal
+
+
+        tv_timer_value.setOnClickListener {
+            val dialog = TimerDialogFragment()
+            dialog.show(supportFragmentManager, TimerDialogFragment.TAG)
         }
 
 
@@ -79,6 +70,10 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         disposeBag.clear()
+    }
+
+    override fun onFragmentInteraction(uri: Uri) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 
