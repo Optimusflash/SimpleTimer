@@ -2,6 +2,8 @@ package com.optimus.simpletimer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.Toast
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -31,21 +33,30 @@ class MainActivity : AppCompatActivity() {
             maxValue = 59
         }
 
+        progress_bar.visibility = View.GONE
 
         np_hours.setOnValueChangedListener { picker, oldVal, newVal ->
             tv_timer_value.text = newVal.toString()
             startValue = newVal
+            progress_bar.max = newVal
         }
 
 
         btn_timer_start.setOnClickListener {
+            progress_bar.visibility = View.VISIBLE
 
             val disposable = startTimer(startValue)
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
+                .subscribe ({
                     tv_timer_value.text = it.toString()
-                }
+                    progress_bar.progress = it
+                },{
+
+                },{
+                    Toast.makeText(this, "Complete", Toast.LENGTH_SHORT).show()
+                })
+
 
             disposeBag.add(disposable)
         }
@@ -59,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 subscriber.onNext(i)
                 Thread.sleep(1000)
             }
+            subscriber.onComplete()
         }
 
 
