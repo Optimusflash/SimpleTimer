@@ -1,41 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp"
     tools:context=".MainActivity">
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center">
-
-
 
         <TextView
             android:id="@+id/tv_timer_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100dp"
-            android:textSize="40sp"
+            android:textSize="56sp"
             android:text="00:00"
-            tools:text="00:00" />
+            android:layout_gravity="center"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_horizontal">
+            android:gravity="center"
+            android:layout_gravity="bottom">
             <ImageButton
                 android:id="@+id/btn_timer_start"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:layout_marginTop="8dp"
                 android:background="@drawable/button_background"
                 android:src="@drawable/ic_play_arrow_black_24dp"
                 android:textColor="@android:color/white" />
@@ -44,7 +33,6 @@
                 android:id="@+id/btn_timer_pause"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:layout_marginTop="8dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/button_background"
@@ -55,26 +43,22 @@
                 android:id="@+id/btn_timer_stop"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:layout_marginTop="8dp"
                 android:background="@drawable/button_background"
                 android:src="@drawable/ic_stop_black_24dp"
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-    </LinearLayout>
-
 
     <ProgressBar
         android:id="@+id/progress_bar"
-        android:layout_width="400dp"
-        android:layout_height="400dp"
+        style="?android:progressBarStyleHorizontal"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
         android:layout_gravity="center"
-        android:layout_marginBottom="100dp"
+
         android:indeterminate="false"
         android:max="100"
         android:progress="87"
-        style="?android:progressBarStyleHorizontal"
-        android:progressDrawable="@drawable/progress_bar_circle"
-        />
+        android:progressDrawable="@drawable/progress_bar_circle" />
 
 </FrameLayout>

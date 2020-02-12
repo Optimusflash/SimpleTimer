@@ -3,9 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minWidth="280dp"
     tools:context=".TimerDialogFragment"
     android:gravity="center_horizontal"
-    android:padding="24dp"
+    android:paddingTop="24dp"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="8dp"
     android:orientation="vertical">
 
     <LinearLayout
@@ -55,7 +59,7 @@
             android:layout_height="wrap_content"
             android:text="Отмена"
             android:layout_weight="1"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="8dp"
             android:background="@color/colorPrimary"
             android:textColor="@android:color/white"/>
 
