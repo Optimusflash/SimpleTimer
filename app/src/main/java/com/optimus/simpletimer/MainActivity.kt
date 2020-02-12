@@ -1,18 +1,18 @@
 package com.optimus.simpletimer
 
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.StringBuilder
 
-class MainActivity : AppCompatActivity(), TimerDialogFragment.OnFragmentInteractionListener {
+class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListener {
 
     private var startValue = 0
     private val disposeBag = CompositeDisposable()
@@ -20,10 +20,6 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnFragmentInteract
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-
-
-        progress_bar.visibility = View.GONE
 
 
 
@@ -39,12 +35,12 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnFragmentInteract
             val disposable = startTimer(startValue)
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe ({
+                .subscribe({
                     tv_timer_value.text = it.toString()
                     progress_bar.progress = it
-                },{
+                }, {
 
-                },{
+                }, {
                     Toast.makeText(this, "Complete", Toast.LENGTH_SHORT).show()
                 })
 
@@ -72,8 +68,27 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnFragmentInteract
         disposeBag.clear()
     }
 
-    override fun onFragmentInteraction(uri: Uri) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun onTimeChange(hours: Int, minutes: Int, seconds: Int) {
+        Log.e("M_MainActivity", "onTimeChange: $hours, $minutes, $seconds")
+
+        val fullTime = buildTime(hours, minutes, seconds)
+
+        tv_timer_value.text = fullTime
+
+    }
+
+    private fun buildTime(hours: Int, minutes: Int, seconds: Int): String {
+
+        val hoursPattern = if (hours < 10) "0%d" else "%d"
+        val minutesPattern = if (minutes < 10) "0%d" else "%d"
+        val secondsPattern = if (seconds < 10) "0%d" else "%d"
+
+        return "${String.format(hoursPattern, hours)}:${String.format(
+            minutesPattern,
+            minutes
+        )}:${String.format(secondsPattern, seconds)}"
+
+
     }
 
 

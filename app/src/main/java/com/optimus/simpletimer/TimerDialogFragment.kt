@@ -3,6 +3,7 @@ package com.optimus.simpletimer
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +13,20 @@ import kotlinx.android.synthetic.main.fragment_timer_dialog.*
 
 class TimerDialogFragment : DialogFragment() {
 
+    private var secondsValue: Int = 0
+    private var minutesValue: Int = 0
+    private var hoursValue: Int = 0
 
     companion object{
         const val TAG = "TimerDialogFragment"
     }
 
-     private var listener: OnFragmentInteractionListener? = null
+     private var listener: OnTimeChangeListener? = null
 
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
+        if (context is OnTimeChangeListener) {
             listener = context
         } else {
             throw RuntimeException("$context must implement OnFragmentInteractionListener")
@@ -54,15 +58,31 @@ class TimerDialogFragment : DialogFragment() {
             maxValue = 59
         }
 
-
-        np_hours.setOnValueChangedListener { picker, oldVal, newVal ->
-//            tv_timer_value.text = newVal.toString()
-//            startValue = newVal
-//            progress_bar.max = newVal
+        np_hours.setOnValueChangedListener { _, _, newVal ->
+            hoursValue = newVal
         }
 
-    }
+        np_minutes.setOnValueChangedListener { _, _, newVal ->
+            minutesValue = newVal
+        }
 
+        np_seconds.setOnValueChangedListener { _, _, newVal ->
+            secondsValue = newVal
+        }
+
+
+        btn_dialog_timer_submit.setOnClickListener {
+            listener?.onTimeChange(hoursValue, minutesValue, secondsValue)
+            Log.e("M_TimerDialogFragment", "onTimeChange: $hoursValue, $minutesValue, $secondsValue")
+            dismiss()
+        }
+
+        btn_dialog_timer_cancel.setOnClickListener {
+            dismiss()
+        }
+
+
+    }
 
 
 
@@ -71,8 +91,8 @@ class TimerDialogFragment : DialogFragment() {
         listener = null
     }
 
-    interface OnFragmentInteractionListener {
-        fun onFragmentInteraction(uri: Uri)
+    interface OnTimeChangeListener {
+        fun onTimeChange(hours: Int, minutes: Int, seconds: Int)
     }
 
 
