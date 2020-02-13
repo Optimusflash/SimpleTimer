@@ -1,21 +1,17 @@
 package com.optimus.simpletimer
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.util.Log
-import android.view.View
 import android.widget.Toast
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.StringBuilder
 
 class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListener {
 
-    private var startValue = 0
-    private val disposeBag = CompositeDisposable()
+    var timeInMills = 0L
+
+    private lateinit var countDownTimer: CountDownTimer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,65 +26,72 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
 
 
         btn_timer_start.setOnClickListener {
-            progress_bar.visibility = View.VISIBLE
-
-            val disposable = startTimer(startValue)
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    tv_timer_value.text = it.toString()
-                    progress_bar.progress = it
-                }, {
-
-                }, {
-                    Toast.makeText(this, "Complete", Toast.LENGTH_SHORT).show()
-                })
-
-
-            disposeBag.add(disposable)
+            startTimer()
         }
-    }
 
-
-    private fun startTimer(value: Int): Observable<Int> {
-
-        return Observable.create { subscriber ->
-            for (i in value downTo 0) {
-                subscriber.onNext(i)
-                Thread.sleep(1000)
-            }
-            subscriber.onComplete()
+        btn_timer_stop.setOnClickListener {
+            stopTimer()
         }
 
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        disposeBag.clear()
+    private fun stopTimer() {
+
+        countDownTimer.cancel()
+        tv_timer_value.text = applicationContext.getString(R.string.time_placeholder)
+        Toast.makeText(applicationContext, "cancel", Toast.LENGTH_LONG).show()
     }
 
-    override fun onTimeChange(hours: Int, minutes: Int, seconds: Int) {
+    private fun startTimer() {
+        val placeholder = this.getString(R.string.time_placeholder)
+        if (tv_timer_value.text == placeholder) {
+            Toast.makeText(this, "Please, set the time...", Toast.LENGTH_LONG).show()
+            return
+        } else {
+
+            countDownTimer = object : CountDownTimer(timeInMills, TimeUnits.SECOND.value) {
+
+                override fun onTick(millisUntilFinished: Long) {
+                    Log.e("M_MainActivity", "$millisUntilFinished")
+                    updateTime(millisUntilFinished)
+                }
+
+                override fun onFinish() {
+                }
+
+            }.start()
+        }
+    }
+
+
+    override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         Log.e("M_MainActivity", "onTimeChange: $hours, $minutes, $seconds")
+        timeInMills =
+            TimeUnits.SECOND.toMillis(seconds) + TimeUnits.MINUTE.toMillis(minutes) + TimeUnits.HOUR.toMillis(
+                hours
+            )
 
-        val fullTime = buildTime(hours, minutes, seconds)
-
-        tv_timer_value.text = fullTime
+        updateTime(timeInMills)
 
     }
 
-    private fun buildTime(hours: Int, minutes: Int, seconds: Int): String {
+    private fun updateTime(milliseconds: Long) {
+
+        val hours = milliseconds / TimeUnits.HOUR.value
+        val minutes = (milliseconds % TimeUnits.HOUR.value) /60000
+        val seconds = (milliseconds % TimeUnits.MINUTE.value) / 1000
 
         val hoursPattern = if (hours < 10) "0%d" else "%d"
         val minutesPattern = if (minutes < 10) "0%d" else "%d"
         val secondsPattern = if (seconds < 10) "0%d" else "%d"
 
-        return "${String.format(hoursPattern, hours)}:${String.format(
+        val result = "${String.format(hoursPattern, hours)}:${String.format(
             minutesPattern,
             minutes
         )}:${String.format(secondsPattern, seconds)}"
 
-
+        tv_timer_value.text = result
     }
 
 

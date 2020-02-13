@@ -1,7 +1,6 @@
 package com.optimus.simpletimer
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -72,7 +71,7 @@ class TimerDialogFragment : DialogFragment() {
 
 
         btn_dialog_timer_submit.setOnClickListener {
-            listener?.onTimeChange(hoursValue, minutesValue, secondsValue)
+            listener?.onTimeSet(hoursValue, minutesValue, secondsValue)
             Log.e("M_TimerDialogFragment", "onTimeChange: $hoursValue, $minutesValue, $secondsValue")
             dismiss()
         }
@@ -92,7 +91,7 @@ class TimerDialogFragment : DialogFragment() {
     }
 
     interface OnTimeChangeListener {
-        fun onTimeChange(hours: Int, minutes: Int, seconds: Int)
+        fun onTimeSet(hours: Int, minutes: Int, seconds: Int)
     }
 
 
