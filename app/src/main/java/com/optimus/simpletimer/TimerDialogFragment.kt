@@ -84,7 +84,6 @@ class TimerDialogFragment : DialogFragment() {
     }
 
 
-
     override fun onDetach() {
         super.onDetach()
         listener = null

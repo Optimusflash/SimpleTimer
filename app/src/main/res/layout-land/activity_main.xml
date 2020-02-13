@@ -9,9 +9,10 @@
 
 
     <FrameLayout
-        android:layout_width="match_parent"
+        android:id="@+id/timer_value_layout"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_above="@+id/setup_buttons_layout">
+        android:layout_marginLeft="16dp">
 
         <ProgressBar
             android:id="@+id/progress_bar"
@@ -37,9 +38,9 @@
         android:id="@+id/setup_buttons_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_toEndOf="@+id/timer_value_layout"
         android:gravity="center"
-        android:layout_alignParentBottom="true"
+        android:layout_centerVertical="true"
         android:orientation="horizontal">
 
         <ImageButton

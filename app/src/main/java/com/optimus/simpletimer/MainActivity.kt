@@ -9,21 +9,17 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListener {
 
-    var timeInMills = 0L
-
     private lateinit var countDownTimer: CountDownTimer
+    private var timeInMills = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
-
         tv_timer_value.setOnClickListener {
             val dialog = TimerDialogFragment()
             dialog.show(supportFragmentManager, TimerDialogFragment.TAG)
         }
-
 
         btn_timer_start.setOnClickListener {
             startTimer()
@@ -33,11 +29,9 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
             stopTimer()
         }
 
-
     }
 
     private fun stopTimer() {
-
         countDownTimer.cancel()
         tv_timer_value.text = applicationContext.getString(R.string.time_placeholder)
         Toast.makeText(applicationContext, "cancel", Toast.LENGTH_LONG).show()
@@ -49,17 +43,13 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
             Toast.makeText(this, "Please, set the time...", Toast.LENGTH_LONG).show()
             return
         } else {
-
             countDownTimer = object : CountDownTimer(timeInMills, TimeUnits.SECOND.value) {
-
                 override fun onTick(millisUntilFinished: Long) {
                     Log.e("M_MainActivity", "$millisUntilFinished")
                     updateTime(millisUntilFinished)
                 }
-
                 override fun onFinish() {
                 }
-
             }.start()
         }
     }
@@ -79,8 +69,8 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
     private fun updateTime(milliseconds: Long) {
 
         val hours = milliseconds / TimeUnits.HOUR.value
-        val minutes = (milliseconds % TimeUnits.HOUR.value) /60000
-        val seconds = (milliseconds % TimeUnits.MINUTE.value) / 1000
+        val minutes = (milliseconds % TimeUnits.HOUR.value) / TimeUnits.MINUTE.value
+        val seconds = (milliseconds % TimeUnits.MINUTE.value) / TimeUnits.SECOND.value
 
         val hoursPattern = if (hours < 10) "0%d" else "%d"
         val minutesPattern = if (minutes < 10) "0%d" else "%d"
