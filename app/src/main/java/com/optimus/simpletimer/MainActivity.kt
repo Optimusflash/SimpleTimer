@@ -11,6 +11,7 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
 
     private lateinit var countDownTimer: CountDownTimer
     private var timeInMills = 0L
+    private var maxProgress = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +35,8 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
     private fun stopTimer() {
         countDownTimer.cancel()
         tv_timer_value.text = applicationContext.getString(R.string.time_placeholder)
+        progress_bar.max = timeInMills.toInt()
+        progress_bar.progress = timeInMills.toInt()
         Toast.makeText(applicationContext, "cancel", Toast.LENGTH_LONG).show()
     }
 
@@ -46,9 +49,13 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
             countDownTimer = object : CountDownTimer(timeInMills, TimeUnits.SECOND.value) {
                 override fun onTick(millisUntilFinished: Long) {
                     Log.e("M_MainActivity", "$millisUntilFinished")
+                    maxProgress -= 1
+                    progress_bar.progress = maxProgress
                     updateTime(millisUntilFinished)
                 }
+
                 override fun onFinish() {
+
                 }
             }.start()
         }
@@ -61,6 +68,10 @@ class MainActivity : AppCompatActivity(), TimerDialogFragment.OnTimeChangeListen
             TimeUnits.SECOND.toMillis(seconds) + TimeUnits.MINUTE.toMillis(minutes) + TimeUnits.HOUR.toMillis(
                 hours
             )
+
+        maxProgress = timeInMills.toInt() / TimeUnits.SECOND.value.toInt()
+        progress_bar.max = maxProgress
+        progress_bar.progress = maxProgress
 
         updateTime(timeInMills)
 
