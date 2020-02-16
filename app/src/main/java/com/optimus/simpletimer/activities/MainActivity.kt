@@ -18,7 +18,6 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mainViewModel: MainViewModel
     private var timerState = TimerState.STOP
-    private var placeholder = ""
     private var isStarted = false
     private var startHours = 0
     private var startMinutes = 0
@@ -36,9 +35,11 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initViews()
+        initViews(savedInstanceState)
         initViewModel()
+    }
 
+    private fun initViews(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
             isStarted = savedInstanceState.getBoolean(IS_RUNNING)
             timerState = savedInstanceState.getSerializable(TIMER_STATE) as TimerState
@@ -46,27 +47,11 @@ class MainActivity : AppCompatActivity(),
             startHours = savedInstanceState.getInt(START_HOURS)
             startMinutes = savedInstanceState.getInt(START_MINUTES)
             startSeconds = savedInstanceState.getInt(START_SECONDS)
-            updateView(startHours, startMinutes, startSeconds)
-            updateUi()
+            updateTimerValue(startHours, startMinutes, startSeconds)
+            updateButtons()
         }
 
-    }
-
-    private fun initViewModel() {
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        mainViewModel.getTime().observe(this, Observer {
-            startHours = it.first
-            startMinutes = it.second
-            startSeconds = it.third
-
-            Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
-            updateView(hours = startHours, minutes = startMinutes, seconds = startSeconds)
-        })
-    }
-
-    private fun initViews() {
-
-        placeholder = this.getString(R.string.time_placeholder)
+        val placeholder = this.getString(R.string.time_placeholder)
 
         tv_timer_value.setOnClickListener {
             val dialog = TimerDialogFragment()
@@ -80,29 +65,42 @@ class MainActivity : AppCompatActivity(),
                     return@setOnClickListener
                 }
                 timerState = TimerState.START
-                updateUi()
+                updateButtons()
                 mainViewModel.startTimer()
             } else {
                 timerState = TimerState.PAUSE
-                updateUi()
+                updateButtons()
                 mainViewModel.pauseTimer()
             }
         }
 
         btn_timer_stop.setOnClickListener {
             timerState = TimerState.STOP
-            updateUi()
+            updateButtons()
             mainViewModel.stopTimer()
         }
     }
 
-    override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
-        mainViewModel.setupTimer(hours, minutes, seconds)
-        updateView(hours, minutes, seconds)
+    private fun initViewModel() {
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel.getTime().observe(this, Observer {
+            startHours = it.first
+            startMinutes = it.second
+            startSeconds = it.third
+
+            Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
+            updateTimerValue(hours = startHours, minutes = startMinutes, seconds = startSeconds)
+        })
     }
 
-    private fun updateView(hours: Int, minutes: Int, seconds: Int) {
+    override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
+        startHours = hours
+        startMinutes = minutes
+        startSeconds = seconds
+        mainViewModel.setupTimer(hours, minutes, seconds)
+    }
 
+    private fun updateTimerValue(hours: Int, minutes: Int, seconds: Int) {
         val hoursPattern = if (hours < 10) "0%d" else "%d"
         val minutesPattern = if (minutes < 10) "0%d" else "%d"
         val secondsPattern = if (seconds < 10) "0%d" else "%d"
@@ -115,7 +113,7 @@ class MainActivity : AppCompatActivity(),
         tv_timer_value.text = result
     }
 
-    private fun updateUi() {
+    private fun updateButtons() {
         val startIcon = resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
         val pauseIcon = resources.getDrawable(R.drawable.ic_pause_black_24dp, theme)
 
@@ -134,17 +132,10 @@ class MainActivity : AppCompatActivity(),
 
             TimerState.STOP -> {
                 isStarted = false
-                btn_timer_start.setImageDrawable(startIcon)
                 btn_timer_stop.visibility = View.GONE
-                startHours = 0
-                startMinutes = 0
-                startSeconds = 0
-                Log.e("M_MainActivity", "Есть контакт")
-                tv_timer_value.text = placeholder
+                btn_timer_start.setImageDrawable(startIcon)
             }
-
         }
-
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

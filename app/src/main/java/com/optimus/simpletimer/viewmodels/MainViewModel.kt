@@ -16,13 +16,13 @@ class MainViewModel: ViewModel() {
     private var time = mutableLiveData(Triple(0,0,0))
     private lateinit var countDownTimer: CountDownTimer
 
-
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val millisTime =
             TimeUnits.SECOND.toMillis(seconds) + TimeUnits.MINUTE.toMillis(minutes) + TimeUnits.HOUR.toMillis(
                 hours
             )
         timeInMillis = millisTime
+        updateTime(timeInMillis)
     }
 
     fun getTime(): LiveData<Triple<Int,Int,Int>>{
@@ -41,10 +41,8 @@ class MainViewModel: ViewModel() {
 
     }
 
-
     fun startTimer() {
         Log.e("M_MainViewModel", " startTimer")
-
             countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
                 override fun onTick(millisUntilFinished: Long) {
                     Log.e("M_MainViewModel", "$millisUntilFinished")
