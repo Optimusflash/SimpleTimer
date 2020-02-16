@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
     private lateinit var mainViewModel: MainViewModel
-    private var timerState = TimerState.STOP
+    private var timerState = TimerState.STOPPED
     private var isStarted = false
     private var startHours = 0
     private var startMinutes = 0
@@ -64,18 +64,18 @@ class MainActivity : AppCompatActivity(),
                     Toast.makeText(this, "Please, set the time...", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                timerState = TimerState.START
+                timerState = TimerState.STARTED
                 updateButtons()
                 mainViewModel.startTimer()
             } else {
-                timerState = TimerState.PAUSE
+                timerState = TimerState.PAUSED
                 updateButtons()
                 mainViewModel.pauseTimer()
             }
         }
 
         btn_timer_stop.setOnClickListener {
-            timerState = TimerState.STOP
+            timerState = TimerState.STOPPED
             updateButtons()
             mainViewModel.stopTimer()
         }
@@ -90,6 +90,13 @@ class MainActivity : AppCompatActivity(),
 
             Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
             updateTimerValue(hours = startHours, minutes = startMinutes, seconds = startSeconds)
+        })
+
+        mainViewModel.getIsFinished().observe(this, Observer {
+            if (it) {
+                timerState = TimerState.STOPPED
+                updateButtons()
+            }
         })
     }
 
@@ -114,26 +121,29 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun updateButtons() {
-        val startIcon = resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
-        val pauseIcon = resources.getDrawable(R.drawable.ic_pause_black_24dp, theme)
+        val icon = if (timerState == TimerState.STARTED) {
+            resources.getDrawable(R.drawable.ic_pause_black_24dp, theme)
+        } else {
+            resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
+        }
 
         when (timerState) {
-            TimerState.START -> {
+            TimerState.STARTED -> {
                 isStarted = true
                 btn_timer_stop.visibility = View.VISIBLE
-                btn_timer_start.setImageDrawable(pauseIcon)
+                btn_timer_start.setImageDrawable(icon)
             }
 
-            TimerState.PAUSE -> {
+            TimerState.PAUSED -> {
                 isStarted = false
                 btn_timer_stop.visibility = View.VISIBLE
-                btn_timer_start.setImageDrawable(startIcon)
+                btn_timer_start.setImageDrawable(icon)
             }
 
-            TimerState.STOP -> {
+            TimerState.STOPPED -> {
                 isStarted = false
                 btn_timer_stop.visibility = View.GONE
-                btn_timer_start.setImageDrawable(startIcon)
+                btn_timer_start.setImageDrawable(icon)
             }
         }
     }

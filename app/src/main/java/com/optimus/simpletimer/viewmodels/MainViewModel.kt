@@ -12,9 +12,11 @@ import com.optimus.simpletimer.helpers.TimeUnits
  */
 
 class MainViewModel: ViewModel() {
-    private var timeInMillis = 0L
-    private var time = mutableLiveData(Triple(0,0,0))
     private lateinit var countDownTimer: CountDownTimer
+    private val time = mutableLiveData(Triple(0,0,0))
+    private var timeInMillis = 0L
+    private val isFinished = mutableLiveData(false)
+
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val millisTime =
@@ -29,6 +31,9 @@ class MainViewModel: ViewModel() {
         return time
     }
 
+    fun getIsFinished(): LiveData<Boolean>{
+        return isFinished
+    }
 
     private fun updateTime(milliseconds: Long){
 
@@ -42,12 +47,16 @@ class MainViewModel: ViewModel() {
     }
 
     fun startTimer() {
+        isFinished.value = false
         Log.e("M_MainViewModel", " startTimer")
             countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
                 override fun onTick(millisUntilFinished: Long) {
                     Log.e("M_MainViewModel", "$millisUntilFinished")
                     timeInMillis = millisUntilFinished
                     updateTime(millisUntilFinished)
+                    if (millisUntilFinished<1000){
+                        isFinished.value = true
+                    }
                 }
 
                 override fun onFinish() {
