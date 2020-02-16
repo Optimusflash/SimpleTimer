@@ -1,5 +1,6 @@
 package com.optimus.simpletimer
 
+import com.optimus.simpletimer.helpers.TimeUnits
 import org.junit.Test
 
 import org.junit.Assert.*

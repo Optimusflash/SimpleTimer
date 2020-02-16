@@ -1,4 +1,4 @@
-package com.optimus.simpletimer
+package com.optimus.simpletimer.helpers
 
 /**
  * Created by Dmitriy Chebotar on 13.02.2020.

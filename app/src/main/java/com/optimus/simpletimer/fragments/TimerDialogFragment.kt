@@ -1,4 +1,4 @@
-package com.optimus.simpletimer
+package com.optimus.simpletimer.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -7,11 +7,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProviders
+import com.optimus.simpletimer.R
+import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.fragment_timer_dialog.*
 
 
 class TimerDialogFragment : DialogFragment() {
 
+    private lateinit var mainViewModel: MainViewModel
     private var secondsValue: Int = 0
     private var minutesValue: Int = 0
     private var hoursValue: Int = 0
@@ -44,6 +48,25 @@ class TimerDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initViewModel()
+        setupNumberPickers()
+        setupViews()
+
+    }
+
+    private fun setupViews() {
+        btn_dialog_timer_submit.setOnClickListener {
+            listener?.onTimeSet(hoursValue, minutesValue, secondsValue)
+            Log.e("M_TimerDialogFragment", "onTimeChange: $hoursValue, $minutesValue, $secondsValue")
+            dismiss()
+        }
+
+        btn_dialog_timer_cancel.setOnClickListener {
+            dismiss()
+        }
+    }
+
+    private fun setupNumberPickers() {
         with(np_hours) {
             minValue = 0
             maxValue = 99
@@ -68,21 +91,12 @@ class TimerDialogFragment : DialogFragment() {
         np_seconds.setOnValueChangedListener { _, _, newVal ->
             secondsValue = newVal
         }
-
-
-        btn_dialog_timer_submit.setOnClickListener {
-            listener?.onTimeSet(hoursValue, minutesValue, secondsValue)
-            Log.e("M_TimerDialogFragment", "onTimeChange: $hoursValue, $minutesValue, $secondsValue")
-            dismiss()
-        }
-
-        btn_dialog_timer_cancel.setOnClickListener {
-            dismiss()
-        }
-
-
     }
 
+
+    private fun initViewModel() {
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+    }
 
     override fun onDetach() {
         super.onDetach()
@@ -92,6 +106,5 @@ class TimerDialogFragment : DialogFragment() {
     interface OnTimeChangeListener {
         fun onTimeSet(hours: Int, minutes: Int, seconds: Int)
     }
-
 
 }
