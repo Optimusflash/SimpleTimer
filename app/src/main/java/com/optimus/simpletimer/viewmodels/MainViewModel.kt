@@ -1,6 +1,7 @@
 package com.optimus.simpletimer.viewmodels
 
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.optimus.simpletimer.extensions.mutableLiveData
@@ -45,6 +46,8 @@ class MainViewModel: ViewModel() {
 
             countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
                 override fun onTick(millisUntilFinished: Long) {
+                    timeInMillis = millisUntilFinished
+                    Log.e("M_MainViewModel", " $millisUntilFinished")
                     setTime(millisUntilFinished)
                 }
 
@@ -59,7 +62,7 @@ class MainViewModel: ViewModel() {
     }
 
     fun pauseTimer() {
-
+        countDownTimer.cancel()
     }
 
 }
