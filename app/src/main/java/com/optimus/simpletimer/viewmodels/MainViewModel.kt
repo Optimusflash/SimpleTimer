@@ -17,7 +17,7 @@ class MainViewModel: ViewModel() {
     private lateinit var countDownTimer: CountDownTimer
 
 
-    fun setData(hours: Int, minutes: Int, seconds: Int) {
+    fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val millisTime =
             TimeUnits.SECOND.toMillis(seconds) + TimeUnits.MINUTE.toMillis(minutes) + TimeUnits.HOUR.toMillis(
                 hours
@@ -30,7 +30,7 @@ class MainViewModel: ViewModel() {
     }
 
 
-    fun setTime(milliseconds: Long){
+    private fun updateTime(milliseconds: Long){
 
         val hours = milliseconds / TimeUnits.HOUR.value
         val minutes = (milliseconds % TimeUnits.HOUR.value) / TimeUnits.MINUTE.value
@@ -43,12 +43,13 @@ class MainViewModel: ViewModel() {
 
 
     fun startTimer() {
+        Log.e("M_MainViewModel", " startTimer")
 
             countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
                 override fun onTick(millisUntilFinished: Long) {
+                    Log.e("M_MainViewModel", "$millisUntilFinished")
                     timeInMillis = millisUntilFinished
-                    Log.e("M_MainViewModel", " $millisUntilFinished")
-                    setTime(millisUntilFinished)
+                    updateTime(millisUntilFinished)
                 }
 
                 override fun onFinish() {
@@ -59,6 +60,8 @@ class MainViewModel: ViewModel() {
 
     fun stopTimer(){
         countDownTimer.cancel()
+        timeInMillis = 0L
+        time.value = Triple(0,0,0)
     }
 
     fun pauseTimer() {

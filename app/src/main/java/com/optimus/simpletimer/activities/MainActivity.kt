@@ -1,6 +1,7 @@
 package com.optimus.simpletimer.activities
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -16,10 +17,20 @@ class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
     private lateinit var mainViewModel: MainViewModel
-
     private var timerState = TimerState.STOP
-
+    private var placeholder = ""
     private var isStarted = false
+    private var startHours = 0
+    private var startMinutes = 0
+    private var startSeconds = 0
+
+    companion object {
+        private const val IS_RUNNING = "isRunning"
+        private const val TIMER_STATE = "timerState"
+        private const val START_HOURS = "startHours"
+        private const val START_MINUTES = "startMinutes"
+        private const val START_SECONDS = "startSeconds"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,16 +39,35 @@ class MainActivity : AppCompatActivity(),
         initViews()
         initViewModel()
 
+        if (savedInstanceState != null) {
+            isStarted = savedInstanceState.getBoolean(IS_RUNNING)
+            timerState = savedInstanceState.getSerializable(TIMER_STATE) as TimerState
+            Log.e("M_MainActivity", timerState.name)
+            startHours = savedInstanceState.getInt(START_HOURS)
+            startMinutes = savedInstanceState.getInt(START_MINUTES)
+            startSeconds = savedInstanceState.getInt(START_SECONDS)
+            updateView(startHours, startMinutes, startSeconds)
+            updateUi()
+        }
+
     }
 
     private fun initViewModel() {
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.getTime().observe(this, Observer {
-            updateViews(it.first, it.second, it.third)
+            startHours = it.first
+            startMinutes = it.second
+            startSeconds = it.third
+
+            Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
+            updateView(hours = startHours, minutes = startMinutes, seconds = startSeconds)
         })
     }
 
     private fun initViews() {
+
+        placeholder = this.getString(R.string.time_placeholder)
+
         tv_timer_value.setOnClickListener {
             val dialog = TimerDialogFragment()
             dialog.show(supportFragmentManager, TimerDialogFragment.TAG)
@@ -45,26 +75,33 @@ class MainActivity : AppCompatActivity(),
 
         btn_timer_start.setOnClickListener {
             if (!isStarted) {
+                if (tv_timer_value.text == placeholder) {
+                    Toast.makeText(this, "Please, set the time...", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 timerState = TimerState.START
-                updateTimerState()
+                updateUi()
+                mainViewModel.startTimer()
             } else {
                 timerState = TimerState.PAUSE
-                updateTimerState()
+                updateUi()
+                mainViewModel.pauseTimer()
             }
         }
 
         btn_timer_stop.setOnClickListener {
             timerState = TimerState.STOP
-            updateTimerState()
+            updateUi()
+            mainViewModel.stopTimer()
         }
     }
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
-        mainViewModel.setData(hours, minutes, seconds)
-        updateViews(hours, minutes, seconds)
+        mainViewModel.setupTimer(hours, minutes, seconds)
+        updateView(hours, minutes, seconds)
     }
 
-    private fun updateViews(hours: Int, minutes: Int, seconds: Int) {
+    private fun updateView(hours: Int, minutes: Int, seconds: Int) {
 
         val hoursPattern = if (hours < 10) "0%d" else "%d"
         val minutesPattern = if (minutes < 10) "0%d" else "%d"
@@ -74,43 +111,49 @@ class MainActivity : AppCompatActivity(),
             minutesPattern,
             minutes
         )}:${String.format(secondsPattern, seconds)}"
-
+        Log.e("M_MainActivity", result)
         tv_timer_value.text = result
     }
 
-    private fun updateTimerState() {
-        val placeholder = applicationContext.getString(R.string.time_placeholder)
+    private fun updateUi() {
         val startIcon = resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
         val pauseIcon = resources.getDrawable(R.drawable.ic_pause_black_24dp, theme)
 
         when (timerState) {
             TimerState.START -> {
-                if (tv_timer_value.text == placeholder){
-                    Toast.makeText(this, "Please, set the time...", Toast.LENGTH_SHORT).show()
-                    return
-                }
+                isStarted = true
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(pauseIcon)
-                isStarted = true
-                mainViewModel.startTimer()
             }
 
             TimerState.PAUSE -> {
-                btn_timer_start.setImageDrawable(startIcon)
                 isStarted = false
-                mainViewModel.pauseTimer()
+                btn_timer_stop.visibility = View.VISIBLE
+                btn_timer_start.setImageDrawable(startIcon)
             }
 
             TimerState.STOP -> {
                 isStarted = false
                 btn_timer_start.setImageDrawable(startIcon)
-                tv_timer_value.text = placeholder
                 btn_timer_stop.visibility = View.GONE
-                mainViewModel.stopTimer()
+                startHours = 0
+                startMinutes = 0
+                startSeconds = 0
+                Log.e("M_MainActivity", "Есть контакт")
+                tv_timer_value.text = placeholder
             }
 
         }
 
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(IS_RUNNING, isStarted)
+        outState.putSerializable(TIMER_STATE, timerState)
+        outState.putInt(START_HOURS, startHours)
+        outState.putInt(START_MINUTES, startMinutes)
+        outState.putInt(START_SECONDS, startSeconds)
     }
 
 }

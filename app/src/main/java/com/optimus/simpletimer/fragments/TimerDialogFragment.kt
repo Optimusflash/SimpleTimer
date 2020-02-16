@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.fragment_timer_dialog.*
 
 class TimerDialogFragment : DialogFragment() {
 
-    private lateinit var mainViewModel: MainViewModel
     private var secondsValue: Int = 0
     private var minutesValue: Int = 0
     private var hoursValue: Int = 0
@@ -48,7 +47,6 @@ class TimerDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        initViewModel()
         setupNumberPickers()
         setupViews()
 
@@ -93,10 +91,6 @@ class TimerDialogFragment : DialogFragment() {
         }
     }
 
-
-    private fun initViewModel() {
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-    }
 
     override fun onDetach() {
         super.onDetach()
