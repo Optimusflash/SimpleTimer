@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity(),
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
+    private var maxProgress = 0
 
     companion object {
         private const val IS_RUNNING = "isRunning"
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity(),
             updateTimerValue(startHours, startMinutes, startSeconds)
             updateButtons()
         }
+
 
         val placeholder = this.getString(R.string.time_placeholder)
 
@@ -98,6 +100,11 @@ class MainActivity : AppCompatActivity(),
                 updateButtons()
             }
         })
+
+
+        mainViewModel.getStep().observe(this, Observer {
+            progress_bar.progress = it
+        })
     }
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
@@ -105,6 +112,9 @@ class MainActivity : AppCompatActivity(),
         startMinutes = minutes
         startSeconds = seconds
         mainViewModel.setupTimer(hours, minutes, seconds)
+        maxProgress = mainViewModel.getNumberOfSeconds()
+        progress_bar.max = maxProgress
+        progress_bar.progress = maxProgress
     }
 
     private fun updateTimerValue(hours: Int, minutes: Int, seconds: Int) {
@@ -144,6 +154,8 @@ class MainActivity : AppCompatActivity(),
                 isStarted = false
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
+                progress_bar.max = 0
+                progress_bar.progress = 0
             }
         }
     }

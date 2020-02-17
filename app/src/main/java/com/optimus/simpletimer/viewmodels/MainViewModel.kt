@@ -11,11 +11,13 @@ import com.optimus.simpletimer.helpers.TimeUnits
  * Created by Dmitriy Chebotar on 16.02.2020.
  */
 
-class MainViewModel: ViewModel() {
+class MainViewModel : ViewModel() {
     private lateinit var countDownTimer: CountDownTimer
-    private val time = mutableLiveData(Triple(0,0,0))
-    private var timeInMillis = 0L
+    private val time = mutableLiveData(Triple(0, 0, 0))
     private val isFinished = mutableLiveData(false)
+    private val step = mutableLiveData(0)
+    private var timeInMillis = 0L
+    private var numberOfSeconds = 0
 
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
@@ -25,17 +27,26 @@ class MainViewModel: ViewModel() {
             )
         timeInMillis = millisTime
         updateTime(timeInMillis)
+        numberOfSeconds = (timeInMillis / TimeUnits.SECOND.value).toInt()
     }
 
-    fun getTime(): LiveData<Triple<Int,Int,Int>>{
+    fun getTime(): LiveData<Triple<Int, Int, Int>> {
         return time
     }
 
-    fun getIsFinished(): LiveData<Boolean>{
+    fun getIsFinished(): LiveData<Boolean> {
         return isFinished
     }
 
-    private fun updateTime(milliseconds: Long){
+    fun getStep(): LiveData<Int> {
+        return step
+    }
+
+    fun getNumberOfSeconds(): Int {
+        return numberOfSeconds
+    }
+
+    private fun updateTime(milliseconds: Long) {
 
         val hours = milliseconds / TimeUnits.HOUR.value
         val minutes = (milliseconds % TimeUnits.HOUR.value) / TimeUnits.MINUTE.value
@@ -48,27 +59,30 @@ class MainViewModel: ViewModel() {
 
     fun startTimer() {
         isFinished.value = false
+        step.value = numberOfSeconds
         Log.e("M_MainViewModel", " startTimer")
-            countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
-                override fun onTick(millisUntilFinished: Long) {
-                    Log.e("M_MainViewModel", "$millisUntilFinished")
-                    timeInMillis = millisUntilFinished
-                    updateTime(millisUntilFinished)
-                    if (millisUntilFinished<1000){
-                        isFinished.value = true
-                    }
+        countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
+            override fun onTick(millisUntilFinished: Long) {
+                timeInMillis = millisUntilFinished
+                numberOfSeconds -= 1
+                Log.e("M_MainViewModel", "$numberOfSeconds")
+                updateTime(millisUntilFinished)
+                step.value = numberOfSeconds
+                if (millisUntilFinished < 1000) {
+                    isFinished.value = true
                 }
+            }
 
-                override fun onFinish() {
+            override fun onFinish() {
 
-                }
-            }.start()
+            }
+        }.start()
     }
 
-    fun stopTimer(){
+    fun stopTimer() {
         countDownTimer.cancel()
         timeInMillis = 0L
-        time.value = Triple(0,0,0)
+        time.value = Triple(0, 0, 0)
     }
 
     fun pauseTimer() {
