@@ -3,6 +3,7 @@ package com.optimus.simpletimer.activities
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -22,7 +23,8 @@ class MainActivity : AppCompatActivity(),
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
-    private var maxProgress = 0
+    private var progressMaxValue = 0
+
 
     companion object {
         private const val IS_RUNNING = "isRunning"
@@ -30,6 +32,7 @@ class MainActivity : AppCompatActivity(),
         private const val START_HOURS = "startHours"
         private const val START_MINUTES = "startMinutes"
         private const val START_SECONDS = "startSeconds"
+        private const val PROGRESS_MAX_VALUE = "progressMaxValue"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,8 +51,11 @@ class MainActivity : AppCompatActivity(),
             startHours = savedInstanceState.getInt(START_HOURS)
             startMinutes = savedInstanceState.getInt(START_MINUTES)
             startSeconds = savedInstanceState.getInt(START_SECONDS)
+            progressMaxValue = savedInstanceState.getInt(PROGRESS_MAX_VALUE)
+            Log.e("M_MainActivity", "Bundle: progressMaxValue $progressMaxValue")
             updateTimerValue(startHours, startMinutes, startSeconds)
             updateButtons()
+            updateProgress()
         }
 
 
@@ -90,7 +96,7 @@ class MainActivity : AppCompatActivity(),
             startMinutes = it.second
             startSeconds = it.third
 
-            Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
+           // Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
             updateTimerValue(hours = startHours, minutes = startMinutes, seconds = startSeconds)
         })
 
@@ -103,6 +109,7 @@ class MainActivity : AppCompatActivity(),
 
 
         mainViewModel.getStep().observe(this, Observer {
+
             progress_bar.progress = it
         })
     }
@@ -112,9 +119,14 @@ class MainActivity : AppCompatActivity(),
         startMinutes = minutes
         startSeconds = seconds
         mainViewModel.setupTimer(hours, minutes, seconds)
-        maxProgress = mainViewModel.getNumberOfSeconds()
-        progress_bar.max = maxProgress
-        progress_bar.progress = maxProgress
+        progressMaxValue = mainViewModel.getNumberOfSeconds()
+        Log.e("M_MainActivity", "onTimeSet: progressMaxValue $progressMaxValue")
+        updateProgress()
+    }
+
+    private fun updateProgress() {
+        progress_bar.max = progressMaxValue
+        progress_bar.progress = progressMaxValue
     }
 
     private fun updateTimerValue(hours: Int, minutes: Int, seconds: Int) {
@@ -126,7 +138,7 @@ class MainActivity : AppCompatActivity(),
             minutesPattern,
             minutes
         )}:${String.format(secondsPattern, seconds)}"
-        Log.e("M_MainActivity", result)
+       // Log.e("M_MainActivity", result)
         tv_timer_value.text = result
     }
 
@@ -154,7 +166,7 @@ class MainActivity : AppCompatActivity(),
                 isStarted = false
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
-                progress_bar.max = 0
+                //progress_bar.max = 0
                 progress_bar.progress = 0
             }
         }
@@ -167,6 +179,7 @@ class MainActivity : AppCompatActivity(),
         outState.putInt(START_HOURS, startHours)
         outState.putInt(START_MINUTES, startMinutes)
         outState.putInt(START_SECONDS, startSeconds)
+        outState.putInt(PROGRESS_MAX_VALUE,progressMaxValue)
     }
 
 }

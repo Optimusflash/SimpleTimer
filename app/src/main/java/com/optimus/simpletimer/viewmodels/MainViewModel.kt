@@ -18,6 +18,7 @@ class MainViewModel : ViewModel() {
     private val step = mutableLiveData(0)
     private var timeInMillis = 0L
     private var numberOfSeconds = 0
+    private var secondsRemaining = 0
 
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
@@ -64,10 +65,11 @@ class MainViewModel : ViewModel() {
         countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
             override fun onTick(millisUntilFinished: Long) {
                 timeInMillis = millisUntilFinished
-                numberOfSeconds -= 1
-                Log.e("M_MainViewModel", "$numberOfSeconds")
                 updateTime(millisUntilFinished)
-                step.value = numberOfSeconds
+                secondsRemaining = (millisUntilFinished / TimeUnits.SECOND.value).toInt()
+                Log.e("M_MainViewModel", "$secondsRemaining")
+                step.value = secondsRemaining
+
                 if (millisUntilFinished < 1000) {
                     isFinished.value = true
                 }
@@ -83,6 +85,7 @@ class MainViewModel : ViewModel() {
         countDownTimer.cancel()
         timeInMillis = 0L
         time.value = Triple(0, 0, 0)
+        secondsRemaining = 0
     }
 
     fun pauseTimer() {
