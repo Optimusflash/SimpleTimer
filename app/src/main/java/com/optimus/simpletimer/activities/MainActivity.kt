@@ -1,9 +1,10 @@
 package com.optimus.simpletimer.activities
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.View
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -13,6 +14,7 @@ import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
@@ -58,8 +60,7 @@ class MainActivity : AppCompatActivity(),
             updateProgress()
         }
 
-
-        val placeholder = this.getString(R.string.time_placeholder)
+        val placeholder = resources.getString(R.string.time_placeholder)
 
         tv_timer_value.setOnClickListener {
             val dialog = TimerDialogFragment()
@@ -69,7 +70,7 @@ class MainActivity : AppCompatActivity(),
         btn_timer_start.setOnClickListener {
             if (!isStarted) {
                 if (tv_timer_value.text == placeholder) {
-                    Toast.makeText(this, "Please, set the time...", Toast.LENGTH_SHORT).show()
+                    showToast("Please, set the time...")
                     return@setOnClickListener
                 }
                 timerState = TimerState.STARTED
@@ -85,9 +86,10 @@ class MainActivity : AppCompatActivity(),
         btn_timer_stop.setOnClickListener {
             timerState = TimerState.STOPPED
             updateButtons()
-            mainViewModel.stopTimer()
+            mainViewModel.resetTimer()
         }
     }
+
 
     private fun initViewModel() {
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -96,37 +98,31 @@ class MainActivity : AppCompatActivity(),
             startMinutes = it.second
             startSeconds = it.third
 
-           // Log.e("M_MainActivity", "initViewModel $startHours $startMinutes $startSeconds")
             updateTimerValue(hours = startHours, minutes = startMinutes, seconds = startSeconds)
         })
 
         mainViewModel.getIsFinished().observe(this, Observer {
             if (it) {
                 timerState = TimerState.STOPPED
+                showToast("Finished...")
                 updateButtons()
             }
         })
 
-
         mainViewModel.getStep().observe(this, Observer {
-
             progress_bar.progress = it
         })
     }
+
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         startHours = hours
         startMinutes = minutes
         startSeconds = seconds
         mainViewModel.setupTimer(hours, minutes, seconds)
-        progressMaxValue = mainViewModel.getNumberOfSeconds()
+        progressMaxValue = mainViewModel.getTimeInSeconds()
         Log.e("M_MainActivity", "onTimeSet: progressMaxValue $progressMaxValue")
         updateProgress()
-    }
-
-    private fun updateProgress() {
-        progress_bar.max = progressMaxValue
-        progress_bar.progress = progressMaxValue
     }
 
     private fun updateTimerValue(hours: Int, minutes: Int, seconds: Int) {
@@ -138,7 +134,6 @@ class MainActivity : AppCompatActivity(),
             minutesPattern,
             minutes
         )}:${String.format(secondsPattern, seconds)}"
-       // Log.e("M_MainActivity", result)
         tv_timer_value.text = result
     }
 
@@ -166,10 +161,27 @@ class MainActivity : AppCompatActivity(),
                 isStarted = false
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
-                //progress_bar.max = 0
                 progress_bar.progress = 0
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        val offset100 = resources.getDimension(R.dimen.toast_offset_100).toInt()
+        val offset50 = resources.getDimension(R.dimen.toast_offset_50).toInt()
+
+        val toast = Toast.makeText(this, message, Toast.LENGTH_SHORT)
+        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT){
+            toast.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0,offset100)
+        } else {
+            toast.setGravity(Gravity.END or Gravity.BOTTOM, offset100,offset50)
+        }
+        toast.show()
+    }
+
+    private fun updateProgress() {
+        progress_bar.max = progressMaxValue
+        progress_bar.progress = progressMaxValue
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

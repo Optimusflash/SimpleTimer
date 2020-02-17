@@ -17,7 +17,7 @@ class MainViewModel : ViewModel() {
     private val isFinished = mutableLiveData(false)
     private val step = mutableLiveData(0)
     private var timeInMillis = 0L
-    private var numberOfSeconds = 0
+    private var timeInSeconds = 0
     private var secondsRemaining = 0
 
 
@@ -28,7 +28,7 @@ class MainViewModel : ViewModel() {
             )
         timeInMillis = millisTime
         updateTime(timeInMillis)
-        numberOfSeconds = (timeInMillis / TimeUnits.SECOND.value).toInt()
+        timeInSeconds = (timeInMillis / TimeUnits.SECOND.value).toInt()
     }
 
     fun getTime(): LiveData<Triple<Int, Int, Int>> {
@@ -43,24 +43,22 @@ class MainViewModel : ViewModel() {
         return step
     }
 
-    fun getNumberOfSeconds(): Int {
-        return numberOfSeconds
+    fun getTimeInSeconds(): Int {
+        return timeInSeconds
     }
 
     private fun updateTime(milliseconds: Long) {
-
         val hours = milliseconds / TimeUnits.HOUR.value
         val minutes = (milliseconds % TimeUnits.HOUR.value) / TimeUnits.MINUTE.value
         val seconds = (milliseconds % TimeUnits.MINUTE.value) / TimeUnits.SECOND.value
 
         val triple = Triple(hours.toInt(), minutes.toInt(), seconds.toInt())
         time.value = triple
-
     }
 
     fun startTimer() {
         isFinished.value = false
-        step.value = numberOfSeconds
+        step.value = timeInSeconds
         Log.e("M_MainViewModel", " startTimer")
         countDownTimer = object : CountDownTimer(timeInMillis, TimeUnits.SECOND.value) {
             override fun onTick(millisUntilFinished: Long) {
@@ -81,7 +79,7 @@ class MainViewModel : ViewModel() {
         }.start()
     }
 
-    fun stopTimer() {
+    fun resetTimer() {
         countDownTimer.cancel()
         timeInMillis = 0L
         time.value = Triple(0, 0, 0)

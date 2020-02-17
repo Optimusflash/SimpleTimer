@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:padding="@dimen/spacing_normal_16"
     tools:context=".activities.MainActivity">
 
 
@@ -16,10 +16,11 @@
         <ProgressBar
             android:id="@+id/progress_bar"
             style="?android:progressBarStyleHorizontal"
-            android:layout_width="320dp"
-            android:layout_height="320dp"
+            android:layout_width="@dimen/progress_bar_size_320"
+            android:layout_height="@dimen/progress_bar_size_320"
             android:layout_gravity="center"
             android:indeterminate="false"
+            android:rotation="270"
             android:progressDrawable="@drawable/progress_bar_circle" />
 
         <TextView
@@ -28,35 +29,28 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/time_placeholder"
-            android:textSize="56sp" />
+            android:textSize="@dimen/timer_text_56" />
     </FrameLayout>
 
     <LinearLayout
         android:id="@+id/setup_buttons_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:gravity="center"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btn_timer_start"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/button_background"
             android:src="@drawable/ic_play_arrow_black_24dp"
-            android:textColor="@android:color/white" />
+            style="@style/button_default" />
 
         <ImageButton
             android:id="@+id/btn_timer_stop"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="@dimen/spacing_normal_16"
             android:visibility="gone"
-            android:background="@drawable/button_background"
             android:src="@drawable/ic_stop_black_24dp"
-            android:textColor="@android:color/white" />
+            style="@style/button_default" />
     </LinearLayout>
 
 
