@@ -41,4 +41,6 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxandroid:$RxVersion"
     implementation "io.reactivex.rxjava2:rxjava:$RxVersion"
 
+    //preference
+    implementation "androidx.preference:preference-ktx:1.1.0"
 }

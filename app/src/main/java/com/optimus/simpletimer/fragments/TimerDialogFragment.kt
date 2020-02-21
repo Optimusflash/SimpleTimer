@@ -7,9 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
-import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.fragment_timer_dialog.*
 
 
@@ -19,11 +17,11 @@ class TimerDialogFragment : DialogFragment() {
     private var minutesValue: Int = 0
     private var hoursValue: Int = 0
 
-    companion object{
+    companion object {
         const val TAG = "TimerDialogFragment"
     }
 
-     private var listener: OnTimeChangeListener? = null
+    private var listener: OnTimeChangeListener? = null
 
 
     override fun onAttach(context: Context) {
@@ -55,7 +53,10 @@ class TimerDialogFragment : DialogFragment() {
     private fun setupViews() {
         btn_dialog_timer_submit.setOnClickListener {
             listener?.onTimeSet(hoursValue, minutesValue, secondsValue)
-            Log.e("M_TimerDialogFragment", "onTimeChange: $hoursValue, $minutesValue, $secondsValue")
+            Log.e(
+                "M_TimerDialogFragment",
+                "onTimeChange: $hoursValue, $minutesValue, $secondsValue"
+            )
             dismiss()
         }
 

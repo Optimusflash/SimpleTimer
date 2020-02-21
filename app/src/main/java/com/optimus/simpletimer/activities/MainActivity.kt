@@ -1,5 +1,6 @@
 package com.optimus.simpletimer.activities
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -11,7 +12,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
+import com.optimus.simpletimer.helpers.PreferenceUtil
 import com.optimus.simpletimer.helpers.TimerState
+import com.optimus.simpletimer.services.TimerService
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -21,12 +24,12 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mainViewModel: MainViewModel
     private var timerState = TimerState.STOPPED
+    private var timeInMillis = 0L
     private var isStarted = false
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
     private var progressMaxValue = 0
-
 
     companion object {
         private const val IS_RUNNING = "isRunning"
@@ -45,7 +48,51 @@ class MainActivity : AppCompatActivity(),
         initViewModel()
     }
 
+    override fun onPause() {
+        super.onPause()
+        PreferenceUtil.saveCurrentState(this,timerState)
+
+        when (timerState) {
+            TimerState.STARTED -> {
+                mainViewModel.pauseTimer()
+                startTimerService()
+            }
+            TimerState.PAUSED -> {
+                stopTimerService()
+            }
+            TimerState.STOPPED ->{
+                stopTimerService()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        timerState = PreferenceUtil.getCurrentState(this)
+
+        when(timerState){
+            TimerState.STARTED->{
+                stopTimerService()
+                mainViewModel.startTimer()
+                updateButtons()
+            }
+
+            TimerState.PAUSED ->{
+                stopTimerService()
+                mainViewModel.pauseTimer()
+                updateButtons()
+            }
+
+            TimerState.STOPPED ->{
+                stopTimerService()
+                mainViewModel.resetTimer()
+                updateButtons()
+            }
+        }
+    }
+
     private fun initViews(savedInstanceState: Bundle?) {
+
         if (savedInstanceState != null) {
             isStarted = savedInstanceState.getBoolean(IS_RUNNING)
             timerState = savedInstanceState.getSerializable(TIMER_STATE) as TimerState
@@ -63,8 +110,10 @@ class MainActivity : AppCompatActivity(),
         val placeholder = resources.getString(R.string.time_placeholder)
 
         tv_timer_value.setOnClickListener {
-            val dialog = TimerDialogFragment()
-            dialog.show(supportFragmentManager, TimerDialogFragment.TAG)
+            if (timerState == TimerState.STOPPED) {
+                val dialog = TimerDialogFragment()
+                dialog.show(supportFragmentManager, TimerDialogFragment.TAG)
+            }
         }
 
         btn_timer_start.setOnClickListener {
@@ -82,12 +131,26 @@ class MainActivity : AppCompatActivity(),
                 mainViewModel.pauseTimer()
             }
         }
-
         btn_timer_stop.setOnClickListener {
             timerState = TimerState.STOPPED
             updateButtons()
             mainViewModel.resetTimer()
         }
+    }
+
+    private fun startTimerService() {
+        timeInMillis = mainViewModel.getTimeInMillis()
+        Log.e("M_MainActivity", "startTimerService timeInMillis $timeInMillis")
+        val intent = Intent(this, TimerService::class.java)
+        intent.putExtra(TimerService.EXTRA_MESSAGE, timeInMillis)
+        startService(intent)
+    }
+
+    private fun stopTimerService() {
+        timeInMillis = mainViewModel.getTimeInMillis()
+        Log.e("M_MainActivity", "stopTimerService timeInMillis $timeInMillis")
+        val intent = Intent(this, TimerService::class.java)
+        stopService(intent)
     }
 
 
@@ -171,10 +234,10 @@ class MainActivity : AppCompatActivity(),
         val offset50 = resources.getDimension(R.dimen.toast_offset_50).toInt()
 
         val toast = Toast.makeText(this, message, Toast.LENGTH_SHORT)
-        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT){
-            toast.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0,offset100)
+        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            toast.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, offset100)
         } else {
-            toast.setGravity(Gravity.END or Gravity.BOTTOM, offset100,offset50)
+            toast.setGravity(Gravity.END or Gravity.BOTTOM, offset100, offset50)
         }
         toast.show()
     }
@@ -191,7 +254,7 @@ class MainActivity : AppCompatActivity(),
         outState.putInt(START_HOURS, startHours)
         outState.putInt(START_MINUTES, startMinutes)
         outState.putInt(START_SECONDS, startSeconds)
-        outState.putInt(PROGRESS_MAX_VALUE,progressMaxValue)
+        outState.putInt(PROGRESS_MAX_VALUE, progressMaxValue)
     }
 
 }
