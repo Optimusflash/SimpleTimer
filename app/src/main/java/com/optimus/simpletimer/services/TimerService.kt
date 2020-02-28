@@ -45,8 +45,8 @@ class TimerService: Service() {
             .setContentIntent(actionPendingIntent)
             .build()
 
-        timer = SimpleTimer(timeInMillis)
-        timer.start()
+//        timer = SimpleTimer(timeInMillis)
+//        timer.start()
 
         startForeground(NOTIFICATION_ID,notification)
 

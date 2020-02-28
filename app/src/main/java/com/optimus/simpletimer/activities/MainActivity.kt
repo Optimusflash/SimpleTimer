@@ -1,9 +1,7 @@
 package com.optimus.simpletimer.activities
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.Toast
@@ -12,10 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
-import com.optimus.simpletimer.helpers.PreferenceUtil
-import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimerState
-import com.optimus.simpletimer.services.TimerService
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -24,19 +19,14 @@ class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
     private lateinit var mainViewModel: MainViewModel
-    private var timerState = TimerState.STOPPED
-    private var timeInMillis = 0L
-    private var isStarted = false
+    private lateinit var timerState: TimerState
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
-    private var progressMaxValue = 0
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         initViews()
         initViewModel()
     }
@@ -51,7 +41,7 @@ class MainActivity : AppCompatActivity(),
         }
 
         btn_timer_start.setOnClickListener {
-            if (!isStarted) {
+            if (timerState != TimerState.STARTED) {
                 if (tv_timer_value.text == placeholder) {
                     showToast("Please, set the time...")
                     return@setOnClickListener
@@ -67,23 +57,28 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun startTimerService() {
-        timeInMillis = mainViewModel.getTimeInMillis()
-        Log.e("M_MainActivity", "startTimerService timeInMillis $timeInMillis")
-        val intent = Intent(this, TimerService::class.java)
-        intent.putExtra(TimerService.EXTRA_MESSAGE, timeInMillis)
-        startService(intent)
+//        timeInMillis = mainViewModel.getTimeInMillis()
+//        Log.e("M_MainActivity", "startTimerService timeInMillis $timeInMillis")
+//        val intent = Intent(this, TimerService::class.java)
+//        intent.putExtra(TimerService.EXTRA_MESSAGE, timeInMillis)
+//        startService(intent)
     }
 
     private fun stopTimerService() {
-        timeInMillis = mainViewModel.getTimeInMillis()
-        Log.e("M_MainActivity", "stopTimerService timeInMillis $timeInMillis")
-        val intent = Intent(this, TimerService::class.java)
-        stopService(intent)
+//        timeInMillis = mainViewModel.getTimeInMillis()
+//        Log.e("M_MainActivity", "stopTimerService timeInMillis $timeInMillis")
+//        val intent = Intent(this, TimerService::class.java)
+//        stopService(intent)
     }
-
 
     private fun initViewModel() {
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+
+        mainViewModel.getTimerState().observe(this, Observer {
+            timerState = it
+            updateButtons()
+        })
+
         mainViewModel.getTime().observe(this, Observer {
             startHours = it.first
             startMinutes = it.second
@@ -91,33 +86,10 @@ class MainActivity : AppCompatActivity(),
             updateTimerValue()
         })
 
-        mainViewModel.getIsFinished().observe(this, Observer {
-            if (it) {
-                timerState = TimerState.STOPPED
-                showToast("Finished...")
-                updateButtons()
-            }
-        })
-
-        mainViewModel.getStep().observe(this, Observer {
-            progress_bar.progress = it
-        })
-
-        mainViewModel.getTimerState().observe(this, Observer {
-            timerState = it
-            updateButtons()
-        })
     }
 
-
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
-        startHours = hours
-        startMinutes = minutes
-        startSeconds = seconds
         mainViewModel.setupTimer(hours, minutes, seconds)
-        progressMaxValue = mainViewModel.getTimeInSeconds()
-        Log.e("M_MainActivity", "onTimeSet: progressMaxValue $progressMaxValue")
-        updateProgress()
     }
 
     private fun updateTimerValue() {
@@ -141,19 +113,16 @@ class MainActivity : AppCompatActivity(),
 
         when (timerState) {
             TimerState.STARTED -> {
-                isStarted = true
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(icon)
             }
 
             TimerState.PAUSED -> {
-                isStarted = false
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(icon)
             }
 
             TimerState.STOPPED -> {
-                isStarted = false
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
                 progress_bar.progress = 0
@@ -173,13 +142,6 @@ class MainActivity : AppCompatActivity(),
         }
         toast.show()
     }
-
-    private fun updateProgress() {
-        progress_bar.max = progressMaxValue
-        progress_bar.progress = progressMaxValue
-    }
-
-
 }
 
 
