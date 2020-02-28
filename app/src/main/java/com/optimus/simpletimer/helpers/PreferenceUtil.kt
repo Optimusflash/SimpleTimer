@@ -9,6 +9,7 @@ import androidx.preference.PreferenceManager
  */
 object PreferenceUtil {
     private const val TIMER_STATE = "com.optimus.simpletimer.timer_state"
+    private const val TIMER_VALUE = "com.optimus.simpletimer.timer_value"
 
     fun saveCurrentState(context: Context, timerState: TimerState) {
         val editor = PreferenceManager.getDefaultSharedPreferences(context).edit()
@@ -24,5 +25,16 @@ object PreferenceUtil {
             1 -> TimerState.PAUSED
             else -> TimerState.STOPPED
         }
+    }
+
+    fun saveTimerValue(context: Context, timeInMillis: Long) {
+        val editor = PreferenceManager.getDefaultSharedPreferences(context).edit()
+        editor.putLong(TIMER_VALUE, timeInMillis)
+        editor.apply()
+    }
+
+    fun getTimerValue(context: Context): Long {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        return preferences.getLong(TIMER_VALUE, 0)
     }
 }

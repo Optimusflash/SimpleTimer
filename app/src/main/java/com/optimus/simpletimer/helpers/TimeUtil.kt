@@ -11,7 +11,7 @@ object TimeUtil {
         return Triple(hours, minutes, seconds)
     }
 
-    fun parseInMillis(time: Triple<Int, Int, Int>?) : Long {
+    fun parseToMillis(time: Triple<Int, Int, Int>?) : Long {
         return if (time == null){
             0
         } else {
@@ -24,7 +24,7 @@ object TimeUtil {
         }
     }
 
-    fun parseInMillis(hours: Int, minutes: Int, seconds: Int) : Long {
+    fun parseToMillis(hours: Int, minutes: Int, seconds: Int) : Long {
         return TimeUnits.SECOND.toMillis(seconds) + TimeUnits.MINUTE.toMillis(minutes) + TimeUnits.HOUR.toMillis(
             hours
         )

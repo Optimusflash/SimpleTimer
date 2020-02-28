@@ -6,9 +6,8 @@ import androidx.lifecycle.MutableLiveData
  * Created by Dmitriy Chebotar on 16.02.2020.
  */
 
-
-fun <T> mutableLiveData(defaultValue: T? = null ): MutableLiveData<T> {
-    val data = MutableLiveData<T>()
-    if (defaultValue!=null) data.value = defaultValue
-    return data
+fun <T : Any?> MutableLiveData<T>.default(defaultValue: T?): MutableLiveData<T> = apply {
+    value = defaultValue
 }
+
+fun <T> MutableLiveData<T>.set(newValue: T) = apply { value = newValue }

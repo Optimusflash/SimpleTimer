@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.PreferenceUtil
+import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.services.TimerService
 import com.optimus.simpletimer.viewmodels.MainViewModel
@@ -31,84 +32,17 @@ class MainActivity : AppCompatActivity(),
     private var startSeconds = 0
     private var progressMaxValue = 0
 
-    companion object {
-        private const val IS_RUNNING = "isRunning"
-        private const val TIMER_STATE = "timerState"
-        private const val START_HOURS = "startHours"
-        private const val START_MINUTES = "startMinutes"
-        private const val START_SECONDS = "startSeconds"
-        private const val PROGRESS_MAX_VALUE = "progressMaxValue"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initViews(savedInstanceState)
+        initViews()
         initViewModel()
     }
 
-    override fun onPause() {
-        super.onPause()
-        PreferenceUtil.saveCurrentState(this,timerState)
-
-        when (timerState) {
-            TimerState.STARTED -> {
-                mainViewModel.pauseTimer()
-                startTimerService()
-            }
-            TimerState.PAUSED -> {
-                stopTimerService()
-            }
-            TimerState.STOPPED ->{
-                stopTimerService()
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        timerState = PreferenceUtil.getCurrentState(this)
-
-        when(timerState){
-            TimerState.STARTED->{
-                stopTimerService()
-                mainViewModel.startTimer()
-                updateButtons()
-            }
-
-            TimerState.PAUSED ->{
-                stopTimerService()
-                mainViewModel.pauseTimer()
-                updateButtons()
-            }
-
-            TimerState.STOPPED ->{
-                stopTimerService()
-                mainViewModel.resetTimer()
-                updateButtons()
-            }
-        }
-    }
-
-    private fun initViews(savedInstanceState: Bundle?) {
-
-        if (savedInstanceState != null) {
-            isStarted = savedInstanceState.getBoolean(IS_RUNNING)
-            timerState = savedInstanceState.getSerializable(TIMER_STATE) as TimerState
-            Log.e("M_MainActivity", timerState.name)
-            startHours = savedInstanceState.getInt(START_HOURS)
-            startMinutes = savedInstanceState.getInt(START_MINUTES)
-            startSeconds = savedInstanceState.getInt(START_SECONDS)
-            progressMaxValue = savedInstanceState.getInt(PROGRESS_MAX_VALUE)
-            Log.e("M_MainActivity", "Bundle: progressMaxValue $progressMaxValue")
-            updateTimerValue(startHours, startMinutes, startSeconds)
-            updateButtons()
-            updateProgress()
-        }
-
+    private fun initViews() {
         val placeholder = resources.getString(R.string.time_placeholder)
-
         tv_timer_value.setOnClickListener {
             if (timerState == TimerState.STOPPED) {
                 val dialog = TimerDialogFragment()
@@ -122,18 +56,12 @@ class MainActivity : AppCompatActivity(),
                     showToast("Please, set the time...")
                     return@setOnClickListener
                 }
-                timerState = TimerState.STARTED
-                updateButtons()
                 mainViewModel.startTimer()
             } else {
-                timerState = TimerState.PAUSED
-                updateButtons()
                 mainViewModel.pauseTimer()
             }
         }
         btn_timer_stop.setOnClickListener {
-            timerState = TimerState.STOPPED
-            updateButtons()
             mainViewModel.resetTimer()
         }
     }
@@ -160,8 +88,7 @@ class MainActivity : AppCompatActivity(),
             startHours = it.first
             startMinutes = it.second
             startSeconds = it.third
-
-            updateTimerValue(hours = startHours, minutes = startMinutes, seconds = startSeconds)
+            updateTimerValue()
         })
 
         mainViewModel.getIsFinished().observe(this, Observer {
@@ -174,6 +101,11 @@ class MainActivity : AppCompatActivity(),
 
         mainViewModel.getStep().observe(this, Observer {
             progress_bar.progress = it
+        })
+
+        mainViewModel.getTimerState().observe(this, Observer {
+            timerState = it
+            updateButtons()
         })
     }
 
@@ -188,15 +120,15 @@ class MainActivity : AppCompatActivity(),
         updateProgress()
     }
 
-    private fun updateTimerValue(hours: Int, minutes: Int, seconds: Int) {
-        val hoursPattern = if (hours < 10) "0%d" else "%d"
-        val minutesPattern = if (minutes < 10) "0%d" else "%d"
-        val secondsPattern = if (seconds < 10) "0%d" else "%d"
+    private fun updateTimerValue() {
+        val hoursPattern = if (startHours < 10) "0%d" else "%d"
+        val minutesPattern = if (startMinutes < 10) "0%d" else "%d"
+        val secondsPattern = if (startSeconds < 10) "0%d" else "%d"
 
-        val result = "${String.format(hoursPattern, hours)}:${String.format(
+        val result = "${String.format(hoursPattern, startHours)}:${String.format(
             minutesPattern,
-            minutes
-        )}:${String.format(secondsPattern, seconds)}"
+            startMinutes
+        )}:${String.format(secondsPattern, startSeconds)}"
         tv_timer_value.text = result
     }
 
@@ -247,15 +179,6 @@ class MainActivity : AppCompatActivity(),
         progress_bar.progress = progressMaxValue
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(IS_RUNNING, isStarted)
-        outState.putSerializable(TIMER_STATE, timerState)
-        outState.putInt(START_HOURS, startHours)
-        outState.putInt(START_MINUTES, startMinutes)
-        outState.putInt(START_SECONDS, startSeconds)
-        outState.putInt(PROGRESS_MAX_VALUE, progressMaxValue)
-    }
 
 }
 
