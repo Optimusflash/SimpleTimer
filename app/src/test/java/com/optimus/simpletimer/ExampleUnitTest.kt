@@ -1,6 +1,7 @@
 package com.optimus.simpletimer
 
 import com.optimus.simpletimer.helpers.TimeUnits
+import com.optimus.simpletimer.helpers.TimeUtil
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -45,5 +46,14 @@ class ExampleUnitTest {
 
     }
 
+    @Test
+    fun toSeconds(){
+        val hours = 1
+        val minutes = 1
+        val seconds = 1
+
+        val result = TimeUtil.parseToSeconds(hours,minutes, seconds)
+        assertEquals(result, 3661)
+    }
 
 }

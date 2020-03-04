@@ -1,15 +1,22 @@
 package com.optimus.simpletimer.activities
 
+import android.animation.ObjectAnimator
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
+import com.optimus.simpletimer.helpers.TimeUnits
+import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
@@ -23,6 +30,9 @@ class MainActivity : AppCompatActivity(),
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
+
+    private var maxValue: Int = 0
+    private lateinit var animation: ObjectAnimator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +64,7 @@ class MainActivity : AppCompatActivity(),
         btn_timer_stop.setOnClickListener {
             mainViewModel.resetTimer()
         }
+
     }
 
     private fun startTimerService() {
@@ -90,6 +101,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         mainViewModel.setupTimer(hours, minutes, seconds)
+        setupAnimation(hours, minutes, seconds)
     }
 
     private fun updateTimerValue() {
@@ -115,6 +127,7 @@ class MainActivity : AppCompatActivity(),
             TimerState.STARTED -> {
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(icon)
+                startAnimation()
             }
 
             TimerState.PAUSED -> {
@@ -128,6 +141,24 @@ class MainActivity : AppCompatActivity(),
                 progress_bar.progress = 0
             }
         }
+    }
+
+    private fun setupAnimation(hours: Int, minutes: Int, seconds: Int) {
+        maxValue = TimeUtil.parseToMillis(hours, minutes, seconds).toInt()
+        progress_bar.max = maxValue * 100
+        animation =
+            ObjectAnimator.ofInt(progress_bar, "progress", maxValue * 100, progress_bar.progress)
+        val millis = TimeUtil.parseToMillis(hours, minutes, seconds)
+        with(animation) {
+            duration = millis
+            interpolator = LinearInterpolator()
+        }
+    }
+
+    private fun startAnimation() {
+        animation.start()
+        Log.e("M_MainActivity", "${animation.animatedValue}")
+        Log.e("M_MainActivity", "${animation.duration}")
     }
 
     private fun showToast(message: String) {

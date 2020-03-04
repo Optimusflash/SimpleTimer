@@ -8,12 +8,10 @@ import com.optimus.simpletimer.helpers.TimeUtil.parseToHMS
  * Created by Dmitriy Chebotar on 21.02.2020.
  */
 
-class SimpleTimer(millisInFuture: Long, countDownInterval: Long = TimeUnits.SECOND.value, private val timerListener : (millis: Long) -> Unit) :
-    CountDownTimer(millisInFuture, countDownInterval) {
-
-    init {
-        parseToHMS(millisInFuture)
-    }
+class SimpleTimer(
+    millisInFuture: Long, countDownInterval: Long = TimeUnits.SECOND.value,
+    private val timerListener: (millis: Long) -> Unit
+) : CountDownTimer(millisInFuture, countDownInterval) {
 
     override fun onTick(millisInFuture: Long) {
         timerListener.invoke(millisInFuture)

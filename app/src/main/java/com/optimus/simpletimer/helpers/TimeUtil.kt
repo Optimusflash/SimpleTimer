@@ -29,4 +29,8 @@ object TimeUtil {
             hours
         )
     }
+
+    fun parseToSeconds(hours: Int, minutes: Int, seconds: Int): Int{
+        return TimeUnits.HOUR.toSeconds(hours) + TimeUnits.MINUTE.toSeconds(minutes) +TimeUnits.SECOND.toSeconds(seconds)
+    }
 }
