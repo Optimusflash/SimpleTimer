@@ -1,12 +1,12 @@
 package com.optimus.simpletimer.activities
 
-import android.animation.ObjectAnimator
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -15,6 +15,8 @@ import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimerState
+import com.optimus.simpletimer.recievers.TimerReceiver
+import com.optimus.simpletimer.services.TimerService
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -24,7 +26,10 @@ class MainActivity : AppCompatActivity(),
 
     companion object{
         private const val PROGRESS_BAR_MAX = "progress_bar_max"
+        const val BROADCAST_ACTION = "com.optimus.simpletimer.timerbroadcast"
     }
+    private lateinit var timerReceiver : TimerReceiver
+
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
     private var startHours = 0
@@ -37,6 +42,22 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
         initViews()
         initViewModel()
+        initBroadcastReceiver()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        //TODO: if service is running -> hide notification
+    }
+
+    override fun onStop() {
+        super.onStop()
+        //TODO: if service is running -> show notification
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(timerReceiver)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -66,28 +87,34 @@ class MainActivity : AppCompatActivity(),
                     return@setOnClickListener
                 }
                 mainViewModel.startTimer()
+                startTimerService()
             } else {
                 mainViewModel.pauseTimer()
             }
         }
         btn_timer_stop.setOnClickListener {
             mainViewModel.resetTimer()
+            stopTimerService()
         }
+
+
+    }
+
+    private fun initBroadcastReceiver() {
+        timerReceiver = TimerReceiver(mainViewModel::updateTime)
+        val filter = IntentFilter(BROADCAST_ACTION)
+        registerReceiver(timerReceiver, filter)
     }
 
     private fun startTimerService() {
-//        timeInMillis = mainViewModel.getTimeInMillis()
-//        Log.e("M_MainActivity", "startTimerService timeInMillis $timeInMillis")
-//        val intent = Intent(this, TimerService::class.java)
-//        intent.putExtra(TimerService.EXTRA_MESSAGE, timeInMillis)
-//        startService(intent)
+        val intent = Intent(this, TimerService::class.java)
+        intent.putExtra(TimerService.EXTRA_MESSAGE, TimeUtil.parseToMillis(startHours,startMinutes,startHours))
+        startService(intent)
     }
 
     private fun stopTimerService() {
-//        timeInMillis = mainViewModel.getTimeInMillis()
-//        Log.e("M_MainActivity", "stopTimerService timeInMillis $timeInMillis")
-//        val intent = Intent(this, TimerService::class.java)
-//        stopService(intent)
+        val intent = Intent(this, TimerService::class.java)
+        stopService(intent)
     }
 
     private fun initViewModel() {

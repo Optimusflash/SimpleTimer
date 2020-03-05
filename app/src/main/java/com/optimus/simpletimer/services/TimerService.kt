@@ -4,11 +4,13 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.optimus.simpletimer.App.Companion.CHANNEL_ID
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.activities.MainActivity
 import com.optimus.simpletimer.model.SimpleTimer
+import com.optimus.simpletimer.recievers.TimerReceiver
 
 /**
  * Created by Dmitriy Chebotar on 18.02.2020.
@@ -33,7 +35,7 @@ class TimerService: Service() {
             this,
             0,
             actionIntent,
-            PendingIntent.FLAG_NO_CREATE
+            PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID )
@@ -45,8 +47,14 @@ class TimerService: Service() {
             .setContentIntent(actionPendingIntent)
             .build()
 
-//        timer = SimpleTimer(timeInMillis)
-//        timer.start()
+        val receiverIntent = Intent(MainActivity.BROADCAST_ACTION)
+
+        timer = SimpleTimer(timeInMillis){millisInFuture ->
+        Log.e("M_TimerService", "$millisInFuture")
+            receiverIntent.putExtra(TimerReceiver.MILLISECONDS_EXTRA,millisInFuture)
+            sendBroadcast(receiverIntent)
+        }
+        timer.start()
 
         startForeground(NOTIFICATION_ID,notification)
 

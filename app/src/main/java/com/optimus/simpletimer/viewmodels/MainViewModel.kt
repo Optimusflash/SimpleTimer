@@ -10,6 +10,7 @@ import com.optimus.simpletimer.extensions.default
 import com.optimus.simpletimer.extensions.set
 import com.optimus.simpletimer.helpers.LiveDataManager
 import com.optimus.simpletimer.helpers.TimeUnits
+import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimeUtil.parseToHMS
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
 import com.optimus.simpletimer.helpers.TimerState
@@ -46,19 +47,25 @@ class MainViewModel : ViewModel() {
         return animationProperty
     }
 
+    fun updateTime(milliseconds: Long){
+        time.set(parseToHMS(milliseconds))
+    }
+
     fun startTimer() {
+//        timeInMillis = parseToMillis(time.value)
+//        valueAnimator.setIntValues(timeInMillis.toInt(),0)
+//        timer = SimpleTimer(timeInMillis + TimeUnits.SECOND.value) { millisInFuture ->
+//            time.set(parseToHMS(millisInFuture))
+//            if (millisInFuture < 1000) {
+//                timerState.set(TimerState.STOPPED)
+//            }
+//        }
+//        timer?.start()
+//        startAnimation()
         timeInMillis = parseToMillis(time.value)
         valueAnimator.setIntValues(timeInMillis.toInt(),0)
-        timer = SimpleTimer(timeInMillis + TimeUnits.SECOND.value) { millisInFuture ->
-            //Log.e("M_MainViewModel", "- $millisInFuture")
-            time.set(parseToHMS(millisInFuture))
-            if (millisInFuture < 1000) {
-                timerState.set(TimerState.STOPPED)
-            }
-        }
-        timer?.start()
-        startAnimation()
         timerState.set(TimerState.STARTED)
+        startAnimation()
     }
 
     private fun startAnimation() {
@@ -72,14 +79,14 @@ class MainViewModel : ViewModel() {
     }
 
     fun pauseTimer() {
-        timeInMillis = parseToMillis(time.value)
-        timer?.pause()
+//        timeInMillis = parseToMillis(time.value)
+//        timer?.pause()
         timerState.set(TimerState.PAUSED)
     }
 
     fun resetTimer() {
-        timer?.reset()
-        time.set(Triple(0, 0, 0))
+//        timer?.reset()
+//        time.set(Triple(0, 0, 0))
         timerState.set(TimerState.STOPPED)
     }
 

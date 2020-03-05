@@ -18,6 +18,7 @@
             </intent-filter>
         </activity>
         <service android:name=".services.TimerService" />
+        <receiver android:name=".recievers.TimerReceiver" />
     </application>
 
 </manifest>
