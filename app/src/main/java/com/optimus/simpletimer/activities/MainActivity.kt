@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +13,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
-import com.optimus.simpletimer.helpers.TimeUnits
 import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.viewmodels.MainViewModel
@@ -25,20 +22,32 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
+    companion object{
+        private const val PROGRESS_BAR_MAX = "progress_bar_max"
+    }
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
     private var startHours = 0
     private var startMinutes = 0
     private var startSeconds = 0
-
-    private var maxValue: Int = 0
-    private lateinit var animation: ObjectAnimator
+    private var maxValue = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
         initViewModel()
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        maxValue = savedInstanceState.getInt(PROGRESS_BAR_MAX)
+        progress_bar.max = maxValue
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(PROGRESS_BAR_MAX, maxValue)
     }
 
     private fun initViews() {
@@ -64,7 +73,6 @@ class MainActivity : AppCompatActivity(),
         btn_timer_stop.setOnClickListener {
             mainViewModel.resetTimer()
         }
-
     }
 
     private fun startTimerService() {
@@ -97,11 +105,15 @@ class MainActivity : AppCompatActivity(),
             updateTimerValue()
         })
 
+        mainViewModel.getAnimationProperty().observe(this, Observer {
+            Log.e("M_MainActivity", "maxValue $maxValue")
+            progress_bar.progress = it
+        })
     }
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         mainViewModel.setupTimer(hours, minutes, seconds)
-        setupAnimation(hours, minutes, seconds)
+        maxValue = TimeUtil.parseToMillis(hours, minutes, seconds).toInt()
     }
 
     private fun updateTimerValue() {
@@ -123,43 +135,25 @@ class MainActivity : AppCompatActivity(),
             resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
         }
 
+        progress_bar.max = maxValue
+
         when (timerState) {
             TimerState.STARTED -> {
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(icon)
-                startAnimation()
             }
-
             TimerState.PAUSED -> {
                 btn_timer_stop.visibility = View.VISIBLE
                 btn_timer_start.setImageDrawable(icon)
             }
-
             TimerState.STOPPED -> {
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
-                progress_bar.progress = 0
+                //progress_bar.progress = 0
             }
         }
     }
 
-    private fun setupAnimation(hours: Int, minutes: Int, seconds: Int) {
-        maxValue = TimeUtil.parseToMillis(hours, minutes, seconds).toInt()
-        progress_bar.max = maxValue * 100
-        animation =
-            ObjectAnimator.ofInt(progress_bar, "progress", maxValue * 100, progress_bar.progress)
-        val millis = TimeUtil.parseToMillis(hours, minutes, seconds)
-        with(animation) {
-            duration = millis
-            interpolator = LinearInterpolator()
-        }
-    }
-
-    private fun startAnimation() {
-        animation.start()
-        Log.e("M_MainActivity", "${animation.animatedValue}")
-        Log.e("M_MainActivity", "${animation.duration}")
-    }
 
     private fun showToast(message: String) {
         val offset100 = resources.getDimension(R.dimen.toast_offset_100).toInt()

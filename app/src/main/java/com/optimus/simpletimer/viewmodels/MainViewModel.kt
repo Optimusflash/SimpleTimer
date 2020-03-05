@@ -1,6 +1,8 @@
 package com.optimus.simpletimer.viewmodels
 
+import android.animation.ValueAnimator
 import android.util.Log
+import android.view.animation.LinearInterpolator
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,9 +24,11 @@ class MainViewModel : ViewModel() {
 
     private val timerState = MutableLiveData<TimerState>().default(TimerState.STOPPED)
     private val time = LiveDataManager.timeMLD
+    private val animationProperty = MutableLiveData<Int>().default(0)
 
     private var timeInMillis = 0L
     private var timer: SimpleTimer? = null
+    private val valueAnimator = ValueAnimator()
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         time.set(Triple(hours, minutes, seconds))
@@ -38,17 +42,33 @@ class MainViewModel : ViewModel() {
         return time
     }
 
+    fun getAnimationProperty(): LiveData<Int>{
+        return animationProperty
+    }
+
     fun startTimer() {
         timeInMillis = parseToMillis(time.value)
+        valueAnimator.setIntValues(timeInMillis.toInt(),0)
         timer = SimpleTimer(timeInMillis + TimeUnits.SECOND.value) { millisInFuture ->
-            Log.e("M_MainViewModel", "- $millisInFuture")
+            //Log.e("M_MainViewModel", "- $millisInFuture")
             time.set(parseToHMS(millisInFuture))
             if (millisInFuture < 1000) {
                 timerState.set(TimerState.STOPPED)
             }
         }
         timer?.start()
+        startAnimation()
         timerState.set(TimerState.STARTED)
+    }
+
+    private fun startAnimation() {
+        valueAnimator.addUpdateListener {
+            animationProperty.set(it.animatedValue as Int)
+            Log.e("M_MainViewModel", "animationProperty ${animationProperty.value}")
+        }
+        valueAnimator.duration = timeInMillis
+        valueAnimator.interpolator = LinearInterpolator()
+        valueAnimator.start()
     }
 
     fun pauseTimer() {

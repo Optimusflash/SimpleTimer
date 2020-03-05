@@ -20,6 +20,7 @@
             android:layout_height="@dimen/progress_bar_size_320"
             android:layout_gravity="center"
             android:indeterminate="false"
+            android:rotation="270"
             android:progressDrawable="@drawable/progress_bar_circle" />
 
         <TextView
