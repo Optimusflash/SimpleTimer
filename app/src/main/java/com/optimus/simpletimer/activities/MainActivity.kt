@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimeUtil
+import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.recievers.TimerReceiver
 import com.optimus.simpletimer.services.TimerService
@@ -24,11 +25,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
-    companion object{
+    companion object {
         private const val PROGRESS_BAR_MAX = "progress_bar_max"
-        const val BROADCAST_ACTION = "com.optimus.simpletimer.timerbroadcast"
     }
-    private lateinit var timerReceiver : TimerReceiver
+
+    private lateinit var timerReceiver: TimerReceiver
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
@@ -86,15 +87,13 @@ class MainActivity : AppCompatActivity(),
                     showToast("Please, set the time...")
                     return@setOnClickListener
                 }
-                mainViewModel.startTimer()
-                startTimerService()
+                startTimer()
             } else {
-                mainViewModel.pauseTimer()
+                pauseTimer()
             }
         }
         btn_timer_stop.setOnClickListener {
-            mainViewModel.resetTimer()
-            stopTimerService()
+            stopTimer()
         }
 
 
@@ -102,17 +101,30 @@ class MainActivity : AppCompatActivity(),
 
     private fun initBroadcastReceiver() {
         timerReceiver = TimerReceiver(mainViewModel::updateTime)
-        val filter = IntentFilter(BROADCAST_ACTION)
+        val filter = IntentFilter()
+        filter.addAction(TimerService.BROADCAST_ACTION_START)
+        filter.addAction(TimerService.BROADCAST_ACTION_PAUSE)
+        filter.addAction(TimerService.BROADCAST_ACTION_STOP)
         registerReceiver(timerReceiver, filter)
     }
 
-    private fun startTimerService() {
+    private fun startTimer() {
         val intent = Intent(this, TimerService::class.java)
-        intent.putExtra(TimerService.EXTRA_MESSAGE, TimeUtil.parseToMillis(startHours,startMinutes,startHours))
+        intent.action = TimerService.BROADCAST_ACTION_START
+        intent.putExtra(
+            TimerService.EXTRA_MESSAGE_START,
+            parseToMillis(startHours, startMinutes, startSeconds)
+        )
         startService(intent)
     }
 
-    private fun stopTimerService() {
+    private fun pauseTimer() {
+        val intent = Intent(this, TimerService::class.java)
+        intent.action = TimerService.BROADCAST_ACTION_PAUSE
+        startService(intent)
+    }
+
+    private fun stopTimer() {
         val intent = Intent(this, TimerService::class.java)
         stopService(intent)
     }
@@ -176,7 +188,7 @@ class MainActivity : AppCompatActivity(),
             TimerState.STOPPED -> {
                 btn_timer_stop.visibility = View.GONE
                 btn_timer_start.setImageDrawable(icon)
-                //progress_bar.progress = 0
+                progress_bar.progress = 0
             }
         }
     }

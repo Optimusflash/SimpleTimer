@@ -9,8 +9,6 @@ import androidx.lifecycle.ViewModel
 import com.optimus.simpletimer.extensions.default
 import com.optimus.simpletimer.extensions.set
 import com.optimus.simpletimer.helpers.LiveDataManager
-import com.optimus.simpletimer.helpers.TimeUnits
-import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimeUtil.parseToHMS
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
 import com.optimus.simpletimer.helpers.TimerState
@@ -29,10 +27,13 @@ class MainViewModel : ViewModel() {
 
     private var timeInMillis = 0L
     private var timer: SimpleTimer? = null
-    private val valueAnimator = ValueAnimator()
+    private lateinit var valueAnimator :ValueAnimator
+
+    private var isFirstCall = true
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         time.set(Triple(hours, minutes, seconds))
+        setupAnimation(hours, minutes, seconds)
     }
 
     fun getTimerState(): LiveData<TimerState> {
@@ -47,8 +48,30 @@ class MainViewModel : ViewModel() {
         return animationProperty
     }
 
-    fun updateTime(milliseconds: Long){
-        time.set(parseToHMS(milliseconds))
+    fun updateTime(milliseconds: Long, state: TimerState){          //From BroadcastReceiver
+        when (state){
+            TimerState.STARTED ->{
+                time.set(parseToHMS(milliseconds))
+                if (isFirstCall){
+                    timerState.set(TimerState.STARTED)
+                    valueAnimator.start()
+                    isFirstCall = false
+                }
+            }
+            TimerState.PAUSED -> {
+                time.set(parseToHMS(milliseconds))
+                timerState.set(TimerState.PAUSED)
+                valueAnimator.pause()
+                isFirstCall = true
+            }
+            TimerState.STOPPED -> {
+                time.set(parseToHMS(milliseconds))
+                timerState.set(TimerState.STOPPED)
+                valueAnimator.cancel()
+                isFirstCall = true
+            }
+        }
+
     }
 
     fun startTimer() {
@@ -62,20 +85,21 @@ class MainViewModel : ViewModel() {
 //        }
 //        timer?.start()
 //        startAnimation()
+
         timeInMillis = parseToMillis(time.value)
         valueAnimator.setIntValues(timeInMillis.toInt(),0)
-        timerState.set(TimerState.STARTED)
-        startAnimation()
     }
 
-    private fun startAnimation() {
+    private fun setupAnimation(hours: Int, minutes: Int, seconds: Int){
+        valueAnimator = ValueAnimator()
+        timeInMillis = parseToMillis(hours, minutes, seconds)
+        valueAnimator.setIntValues(timeInMillis.toInt(),0)
         valueAnimator.addUpdateListener {
             animationProperty.set(it.animatedValue as Int)
             Log.e("M_MainViewModel", "animationProperty ${animationProperty.value}")
         }
         valueAnimator.duration = timeInMillis
         valueAnimator.interpolator = LinearInterpolator()
-        valueAnimator.start()
     }
 
     fun pauseTimer() {
