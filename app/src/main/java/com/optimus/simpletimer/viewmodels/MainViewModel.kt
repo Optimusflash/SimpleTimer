@@ -54,7 +54,11 @@ class MainViewModel : ViewModel() {
                 time.set(parseToHMS(milliseconds))
                 if (isFirstCall){
                     timerState.set(TimerState.STARTED)
-                    valueAnimator.start()
+                    if (valueAnimator.isPaused){
+                        valueAnimator.resume()
+                    } else {
+                        valueAnimator.start()
+                    }
                     isFirstCall = false
                 }
             }
@@ -74,21 +78,6 @@ class MainViewModel : ViewModel() {
 
     }
 
-    fun startTimer() {
-//        timeInMillis = parseToMillis(time.value)
-//        valueAnimator.setIntValues(timeInMillis.toInt(),0)
-//        timer = SimpleTimer(timeInMillis + TimeUnits.SECOND.value) { millisInFuture ->
-//            time.set(parseToHMS(millisInFuture))
-//            if (millisInFuture < 1000) {
-//                timerState.set(TimerState.STOPPED)
-//            }
-//        }
-//        timer?.start()
-//        startAnimation()
-
-        timeInMillis = parseToMillis(time.value)
-        valueAnimator.setIntValues(timeInMillis.toInt(),0)
-    }
 
     private fun setupAnimation(hours: Int, minutes: Int, seconds: Int){
         valueAnimator = ValueAnimator()
@@ -102,16 +91,5 @@ class MainViewModel : ViewModel() {
         valueAnimator.interpolator = LinearInterpolator()
     }
 
-    fun pauseTimer() {
-//        timeInMillis = parseToMillis(time.value)
-//        timer?.pause()
-        timerState.set(TimerState.PAUSED)
-    }
-
-    fun resetTimer() {
-//        timer?.reset()
-//        time.set(Triple(0, 0, 0))
-        timerState.set(TimerState.STOPPED)
-    }
 
 }

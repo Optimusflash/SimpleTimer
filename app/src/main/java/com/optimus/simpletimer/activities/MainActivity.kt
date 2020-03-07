@@ -48,12 +48,12 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStart() {
         super.onStart()
-        //TODO: if service is running -> hide notification
+        //TODO: register receiver -> hide notification
     }
 
     override fun onStop() {
         super.onStop()
-        //TODO: if service is running -> show notification
+        //TODO: unregister receiver -> show notification
     }
 
     override fun onDestroy() {
