@@ -15,6 +15,7 @@ import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
+import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.recievers.TimerReceiver
 import com.optimus.simpletimer.services.TimerService
@@ -43,22 +44,26 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
         initViews()
         initViewModel()
-        initBroadcastReceiver()
     }
 
     override fun onStart() {
         super.onStart()
+        initBroadcastReceiver()
         //TODO: register receiver -> hide notification
+        TimerNotification.hideNotification(context = this)
     }
 
     override fun onStop() {
         super.onStop()
         //TODO: unregister receiver -> show notification
+        if (timerState == TimerState.STARTED){
+            TimerNotification.showNotification(context = this)
+        }
+        unregisterReceiver(timerReceiver)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(timerReceiver)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
