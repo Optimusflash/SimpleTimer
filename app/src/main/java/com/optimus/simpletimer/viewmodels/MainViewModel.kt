@@ -90,6 +90,4 @@ class MainViewModel : ViewModel() {
         valueAnimator.duration = timeInMillis
         valueAnimator.interpolator = LinearInterpolator()
     }
-
-
 }

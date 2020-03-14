@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
@@ -61,6 +62,11 @@ class MainActivity : AppCompatActivity(),
     override fun onStop() {
         super.onStop()
         unregisterReceiver(timerReceiver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.e("M_MainActivity", "onDestroy")
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -146,7 +152,6 @@ class MainActivity : AppCompatActivity(),
         })
 
         mainViewModel.getAnimationProperty().observe(this, Observer {
-            Log.e("M_MainActivity", "maxValue $maxValue")
             progress_bar.progress = it
         })
     }

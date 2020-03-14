@@ -10,6 +10,7 @@
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:paddingBottom="8dp"
+    android:background="@drawable/dialog_background"
     android:orientation="vertical">
 
     <LinearLayout
@@ -51,7 +52,7 @@
             android:layout_height="wrap_content"
             android:text="Ok"
             android:layout_weight="1"
-            android:background="@color/colorPrimary"
+            android:background="@drawable/button_dialog_background"
             android:textColor="@android:color/white"/>
         <Button
             android:id="@+id/btn_dialog_timer_cancel"
@@ -60,7 +61,7 @@
             android:text="Cancel"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:background="@color/colorPrimary"
+            android:background="@drawable/button_dialog_background"
             android:textColor="@android:color/white"/>
 
     </LinearLayout>

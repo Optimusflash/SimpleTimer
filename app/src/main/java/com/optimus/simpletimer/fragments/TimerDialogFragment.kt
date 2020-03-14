@@ -37,7 +37,6 @@ class TimerDialogFragment : DialogFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         return inflater.inflate(R.layout.fragment_timer_dialog, container, false)
     }
 
@@ -68,7 +67,7 @@ class TimerDialogFragment : DialogFragment() {
     private fun setupNumberPickers() {
         with(np_hours) {
             minValue = 0
-            maxValue = 99
+            maxValue = 24
         }
         with(np_minutes) {
             minValue = 0
