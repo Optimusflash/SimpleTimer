@@ -3,6 +3,7 @@ package com.optimus.simpletimer.services
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
@@ -10,6 +11,8 @@ import androidx.core.app.NotificationCompat
 import com.optimus.simpletimer.App.Companion.CHANNEL_ID
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.activities.MainActivity
+import com.optimus.simpletimer.helpers.TimeUnits
+import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.model.SimpleTimer
 import com.optimus.simpletimer.recievers.TimerReceiver
 
@@ -27,12 +30,19 @@ class TimerService : Service() {
         const val BROADCAST_ACTION_PAUSE = "com.optimus.simpletimer.broadcast_action_pause"
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            startForeground(TimerNotification.NOTIFICATION_ID, TimerNotification.getNotification(this))
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
-            if (it.action == BROADCAST_ACTION_START) {
+            if (it.action == MainActivity.ACTION_START) {
                 timeInMillis = it.getLongExtra(EXTRA_MESSAGE_START, 0)
                 val actionStartIntent = Intent(BROADCAST_ACTION_START)
-                timer = SimpleTimer(timeInMillis) { millisInFuture ->
+                timer = SimpleTimer(timeInMillis + TimeUnits.SECOND.value) { millisInFuture ->
                     timeInMillis = millisInFuture
                     actionStartIntent.putExtra(
                         TimerReceiver.MILLISECONDS_EXTRA_START,
@@ -40,13 +50,12 @@ class TimerService : Service() {
                     )
                     sendBroadcast(actionStartIntent)
                     if (millisInFuture < 1000) {
-                        val actionStopIntent = Intent(BROADCAST_ACTION_STOP)
-                        sendBroadcast(actionStopIntent)
+                        stopSelf()
                     }
                 }
                 timer.start()
             }
-            if (it.action == BROADCAST_ACTION_PAUSE) {
+            if (it.action == MainActivity.ACTION_PAUSE) {
                 timer.pause()
                 val actionPauseIntent = Intent(BROADCAST_ACTION_PAUSE)
                 actionPauseIntent.putExtra(TimerReceiver.MILLISECONDS_EXTRA_PAUSE, timeInMillis)
@@ -62,15 +71,10 @@ class TimerService : Service() {
 
     override fun onDestroy() {
         Log.e("M_TimerService", "Service onDestroy")
-
         timer.reset()
         val actionStopIntent = Intent()
         actionStopIntent.action = BROADCAST_ACTION_STOP
         sendBroadcast(actionStopIntent)
-
-
         super.onDestroy()
-
     }
-
 }

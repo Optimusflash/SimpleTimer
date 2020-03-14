@@ -34,7 +34,5 @@ class TimerReceiver(private val listener: (timeInFuture: Long, state: TimerState
                 }
             }
         }
-
-
     }
 }

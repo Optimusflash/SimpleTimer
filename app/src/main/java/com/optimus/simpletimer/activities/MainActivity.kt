@@ -3,7 +3,9 @@ package com.optimus.simpletimer.activities
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -19,6 +21,9 @@ import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.recievers.TimerReceiver
 import com.optimus.simpletimer.services.TimerService
+import com.optimus.simpletimer.services.TimerService.Companion.BROADCAST_ACTION_PAUSE
+import com.optimus.simpletimer.services.TimerService.Companion.BROADCAST_ACTION_START
+import com.optimus.simpletimer.services.TimerService.Companion.BROADCAST_ACTION_STOP
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -28,6 +33,8 @@ class MainActivity : AppCompatActivity(),
 
     companion object {
         private const val PROGRESS_BAR_MAX = "progress_bar_max"
+        const val ACTION_START = "action_start"
+        const val ACTION_PAUSE = "action_pause"
     }
 
     private lateinit var timerReceiver: TimerReceiver
@@ -49,21 +56,11 @@ class MainActivity : AppCompatActivity(),
     override fun onStart() {
         super.onStart()
         initBroadcastReceiver()
-        //TODO: register receiver -> hide notification
-        TimerNotification.hideNotification(context = this)
     }
 
     override fun onStop() {
         super.onStop()
-        //TODO: unregister receiver -> show notification
-        if (timerState == TimerState.STARTED){
-            TimerNotification.showNotification(context = this)
-        }
         unregisterReceiver(timerReceiver)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -100,32 +97,31 @@ class MainActivity : AppCompatActivity(),
         btn_timer_stop.setOnClickListener {
             stopTimer()
         }
-
-
     }
 
     private fun initBroadcastReceiver() {
         timerReceiver = TimerReceiver(mainViewModel::updateTime)
         val filter = IntentFilter()
-        filter.addAction(TimerService.BROADCAST_ACTION_START)
-        filter.addAction(TimerService.BROADCAST_ACTION_PAUSE)
-        filter.addAction(TimerService.BROADCAST_ACTION_STOP)
+        filter.addAction(BROADCAST_ACTION_START)
+        filter.addAction(BROADCAST_ACTION_STOP)
+        filter.addAction(BROADCAST_ACTION_PAUSE)
         registerReceiver(timerReceiver, filter)
     }
 
     private fun startTimer() {
         val intent = Intent(this, TimerService::class.java)
-        intent.action = TimerService.BROADCAST_ACTION_START
-        intent.putExtra(
-            TimerService.EXTRA_MESSAGE_START,
-            parseToMillis(startHours, startMinutes, startSeconds)
-        )
-        startService(intent)
+        intent.action = ACTION_START
+        intent.putExtra(TimerService.EXTRA_MESSAGE_START,parseToMillis(startHours, startMinutes, startSeconds))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     private fun pauseTimer() {
         val intent = Intent(this, TimerService::class.java)
-        intent.action = TimerService.BROADCAST_ACTION_PAUSE
+        intent.action = ACTION_PAUSE
         startService(intent)
     }
 
@@ -157,7 +153,7 @@ class MainActivity : AppCompatActivity(),
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         mainViewModel.setupTimer(hours, minutes, seconds)
-        maxValue = TimeUtil.parseToMillis(hours, minutes, seconds).toInt()
+        maxValue = parseToMillis(hours, minutes, seconds).toInt()
     }
 
     private fun updateTimerValue() {
@@ -197,7 +193,6 @@ class MainActivity : AppCompatActivity(),
             }
         }
     }
-
 
     private fun showToast(message: String) {
         val offset100 = resources.getDimension(R.dimen.toast_offset_100).toInt()
