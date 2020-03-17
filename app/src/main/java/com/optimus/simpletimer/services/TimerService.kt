@@ -32,13 +32,19 @@ class TimerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            startForeground(TimerNotification.NOTIFICATION_ID, TimerNotification.getNotification(this))
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+//            startForeground(TimerNotification.NOTIFICATION_ID, TimerNotification.getNotification(this))
+//        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
+            if (it.action == MainActivity.ACTION_START_FOREGROUND){
+                startForeground(TimerNotification.NOTIFICATION_ID, TimerNotification.getNotification(this))
+            }
+            if (it.action == MainActivity.ACTION_STOP_FOREGROUND){
+                stopForeground(true)
+            }
             if (it.action == MainActivity.ACTION_START) {
                 timeInMillis = it.getLongExtra(EXTRA_MESSAGE_START, 0)
                 val actionStartIntent = Intent(BROADCAST_ACTION_START)

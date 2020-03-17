@@ -1,5 +1,8 @@
 package com.optimus.simpletimer.activities
 
+import android.accounts.AccountManagerCallback
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
@@ -11,6 +14,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -36,6 +40,8 @@ class MainActivity : AppCompatActivity(),
         private const val PROGRESS_BAR_MAX = "progress_bar_max"
         const val ACTION_START = "action_start"
         const val ACTION_PAUSE = "action_pause"
+        const val ACTION_START_FOREGROUND = "action_start_foreground"
+        const val ACTION_STOP_FOREGROUND = "action_stop_foreground"
     }
 
     private lateinit var timerReceiver: TimerReceiver
@@ -57,11 +63,21 @@ class MainActivity : AppCompatActivity(),
     override fun onStart() {
         super.onStart()
         initBroadcastReceiver()
+
+            val intent = Intent(this, TimerService::class.java)
+            intent.action = ACTION_STOP_FOREGROUND
+            startService(intent)
+
     }
 
     override fun onStop() {
         super.onStop()
         unregisterReceiver(timerReceiver)
+        if (timerState==TimerState.STARTED) {
+            val intent = Intent(this, TimerService::class.java)
+            intent.action = ACTION_START_FOREGROUND
+            startService(intent)
+        }
     }
 
     override fun onDestroy() {
@@ -119,7 +135,9 @@ class MainActivity : AppCompatActivity(),
         intent.action = ACTION_START
         intent.putExtra(TimerService.EXTRA_MESSAGE_START,parseToMillis(startHours, startMinutes, startSeconds))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            startForegroundService(intent)
+            //startForegroundService(intent)
+            startService(intent)
+
         } else {
             startService(intent)
         }
