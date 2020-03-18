@@ -48,9 +48,7 @@ class MainActivity : AppCompatActivity(),
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
-    private var startHours = 0
-    private var startMinutes = 0
-    private var startSeconds = 0
+    private var timeInMilliseconds = 0L
     private var maxValue = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,6 +95,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun initViews() {
+        progress_bar.progress = 0
         val placeholder = resources.getString(R.string.time_placeholder)
         tv_timer_value.setOnClickListener {
             if (timerState == TimerState.STOPPED) {
@@ -133,7 +132,7 @@ class MainActivity : AppCompatActivity(),
     private fun startTimer() {
         val intent = Intent(this, TimerService::class.java)
         intent.action = ACTION_START
-        intent.putExtra(TimerService.EXTRA_MESSAGE_START,parseToMillis(startHours, startMinutes, startSeconds))
+        intent.putExtra(TimerService.EXTRA_MESSAGE_START,timeInMilliseconds)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             //startForegroundService(intent)
             startService(intent)
@@ -163,33 +162,22 @@ class MainActivity : AppCompatActivity(),
         })
 
         mainViewModel.getTime().observe(this, Observer {
-            startHours = it.first
-            startMinutes = it.second
-            startSeconds = it.third
-            updateTimerValue()
+            tv_timer_value.text = it.first
+            timeInMilliseconds = it.second
+            val progress = it.third
+            Log.e("M_MainActivity", "$timeInMilliseconds")
+            progress_bar.progress = progress-1000
         })
 
-        mainViewModel.getAnimationProperty().observe(this, Observer {
-            progress_bar.progress = it
-        })
     }
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         mainViewModel.setupTimer(hours, minutes, seconds)
-        maxValue = parseToMillis(hours, minutes, seconds).toInt()
+        progress_bar.max = parseToMillis(hours, minutes, seconds).toInt()-1000
+        timeInMilliseconds = parseToMillis(hours, minutes, seconds)
+        Log.e("M_MainActivity", "max progress: ${progress_bar.max}")
     }
 
-    private fun updateTimerValue() {
-        val hoursPattern = if (startHours < 10) "0%d" else "%d"
-        val minutesPattern = if (startMinutes < 10) "0%d" else "%d"
-        val secondsPattern = if (startSeconds < 10) "0%d" else "%d"
-
-        val result = "${String.format(hoursPattern, startHours)}:${String.format(
-            minutesPattern,
-            startMinutes
-        )}:${String.format(secondsPattern, startSeconds)}"
-        tv_timer_value.text = result
-    }
 
     private fun updateButtons() {
         val icon = if (timerState == TimerState.STARTED) {
@@ -197,8 +185,6 @@ class MainActivity : AppCompatActivity(),
         } else {
             resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, theme)
         }
-
-        progress_bar.max = maxValue
 
         when (timerState) {
             TimerState.STARTED -> {

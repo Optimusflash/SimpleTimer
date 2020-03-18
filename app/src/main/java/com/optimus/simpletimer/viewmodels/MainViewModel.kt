@@ -1,18 +1,14 @@
 package com.optimus.simpletimer.viewmodels
 
-import android.animation.ValueAnimator
-import android.util.Log
-import android.view.animation.LinearInterpolator
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.optimus.simpletimer.extensions.default
 import com.optimus.simpletimer.extensions.set
-import com.optimus.simpletimer.helpers.LiveDataManager
-import com.optimus.simpletimer.helpers.TimeUtil.parseToHMS
+import com.optimus.simpletimer.helpers.TimeUtil.parseHMStoString
+import com.optimus.simpletimer.helpers.TimeUtil.parseMillisToString
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
 import com.optimus.simpletimer.helpers.TimerState
-import com.optimus.simpletimer.model.SimpleTimer
 
 
 /**
@@ -20,74 +16,45 @@ import com.optimus.simpletimer.model.SimpleTimer
  */
 
 class MainViewModel : ViewModel() {
-
     private val timerState = MutableLiveData<TimerState>().default(TimerState.STOPPED)
-    private val time = LiveDataManager.timeMLD
-    private val animationProperty = MutableLiveData<Int>().default(0)
+    private val time = MutableLiveData<Triple<String,Long,Int>>().default(Triple("00:00:00",0L,0))  //Time string, milliseconds, progress
 
-    private var timeInMillis = 0L
-    private var timer: SimpleTimer? = null
-    private lateinit var valueAnimator :ValueAnimator
-
-    private var isFirstCall = true
+    var tick = 0
+    private var tickCount = 0
+    // private var timeInMillis = 0L
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
-        time.set(Triple(hours, minutes, seconds))
-        setupAnimation(hours, minutes, seconds)
+        val timeString = parseHMStoString(hours, minutes, seconds)
+        val timeInMillis = parseToMillis(hours, minutes, seconds)
+        time.set(Triple(timeString,timeInMillis,360))
+        tickCount = timeInMillis.toInt() / 10
+        tick = 360 / tickCount
     }
 
     fun getTimerState(): LiveData<TimerState> {
         return timerState
     }
 
-    fun getTime(): LiveData<Triple<Int, Int, Int>> {
+    fun getTime(): LiveData<Triple<String,Long,Int>> {
         return time
     }
 
-    fun getAnimationProperty(): LiveData<Int>{
-        return animationProperty
-    }
 
-    fun updateTime(milliseconds: Long, state: TimerState){          //From BroadcastReceiver
-        when (state){
-            TimerState.STARTED ->{
-                time.set(parseToHMS(milliseconds))
-                if (isFirstCall){
-                    timerState.set(TimerState.STARTED)
-                    if (valueAnimator.isPaused){
-                        valueAnimator.resume()
-                    } else {
-                        valueAnimator.start()
-                    }
-                    isFirstCall = false
-                }
+    fun updateTime(milliseconds: Long, state: TimerState) {          //From BroadcastReceiver
+        val timeString = parseMillisToString(milliseconds)
+        when (state) {
+            TimerState.STARTED -> {
+                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
+                timerState.set(TimerState.STARTED)
             }
             TimerState.PAUSED -> {
-                time.set(parseToHMS(milliseconds))
+                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
                 timerState.set(TimerState.PAUSED)
-                valueAnimator.pause()
-                isFirstCall = true
             }
             TimerState.STOPPED -> {
-                time.set(parseToHMS(milliseconds))
+                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
                 timerState.set(TimerState.STOPPED)
-                valueAnimator.cancel()
-                isFirstCall = true
             }
         }
-
-    }
-
-
-    private fun setupAnimation(hours: Int, minutes: Int, seconds: Int){
-        valueAnimator = ValueAnimator()
-        timeInMillis = parseToMillis(hours, minutes, seconds)
-        valueAnimator.setIntValues(timeInMillis.toInt(),0)
-        valueAnimator.addUpdateListener {
-            animationProperty.set(it.animatedValue as Int)
-            Log.e("M_MainViewModel", "animationProperty ${animationProperty.value}")
-        }
-        valueAnimator.duration = timeInMillis
-        valueAnimator.interpolator = LinearInterpolator()
     }
 }
