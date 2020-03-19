@@ -14,7 +14,7 @@ import com.optimus.simpletimer.recievers.TimerReceiver
  */
 class TimerService : Service() {
     private lateinit var timer: CountDownTimer
-    private var timeInMillis = 0L
+    private var timeInMillis = 1000L
 
     companion object {
         const val EXTRA_MESSAGE_START = "extra_message_start"
@@ -23,15 +23,32 @@ class TimerService : Service() {
         const val BROADCAST_ACTION_PAUSE = "com.optimus.simpletimer.broadcast_action_pause"
     }
 
-    override fun onCreate() {
-        super.onCreate()
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-//            startForeground(TimerNotification.NOTIFICATION_ID, TimerNotification.getNotification(this))
-//        }
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
+            if (it.action == MainActivity.ACTION_START) {
+                timeInMillis = it.getLongExtra(EXTRA_MESSAGE_START, 0)
+                val actionStartIntent = Intent(BROADCAST_ACTION_START)
+                timer = object : CountDownTimer(timeInMillis, 16) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        timeInMillis = millisUntilFinished
+                            actionStartIntent.putExtra(TimerReceiver.MILLISECONDS_EXTRA_START,millisUntilFinished)
+                            sendBroadcast(actionStartIntent)
+                        if (timeInMillis<1000){
+                            this.onFinish()
+
+                        }
+                    }
+                    override fun onFinish() {
+                        stopSelf()
+                    }
+                }
+                timer.start()
+            }
+            if (it.action == MainActivity.ACTION_PAUSE) {
+                timer.cancel()
+                val actionPauseIntent = Intent(BROADCAST_ACTION_PAUSE)
+                sendBroadcast(actionPauseIntent)
+            }
             if (it.action == MainActivity.ACTION_START_FOREGROUND) {
                 startForeground(
                     TimerNotification.NOTIFICATION_ID,
@@ -40,36 +57,6 @@ class TimerService : Service() {
             }
             if (it.action == MainActivity.ACTION_STOP_FOREGROUND) {
                 stopForeground(true)
-            }
-            if (it.action == MainActivity.ACTION_START) {
-                timeInMillis = it.getLongExtra(EXTRA_MESSAGE_START, 0)
-                val actionStartIntent = Intent(BROADCAST_ACTION_START)
-                timer = object : CountDownTimer(timeInMillis+1000, 10) {
-                    override fun onTick(millisUntilFinished: Long) {
-                        Log.e("M_TimerService", "$millisUntilFinished")
-                        timeInMillis = millisUntilFinished
-                        actionStartIntent.putExtra(
-                            TimerReceiver.MILLISECONDS_EXTRA_START,
-                            millisUntilFinished
-                        )
-                        if (millisUntilFinished<1000){
-                            stopSelf()
-                        }
-                        sendBroadcast(actionStartIntent)
-                    }
-
-                    override fun onFinish() {
-
-                    }
-
-                }
-                timer.start()
-            }
-            if (it.action == MainActivity.ACTION_PAUSE) {
-                timer.cancel()
-                val actionPauseIntent = Intent(BROADCAST_ACTION_PAUSE)
-                actionPauseIntent.putExtra(TimerReceiver.MILLISECONDS_EXTRA_PAUSE, timeInMillis)
-                sendBroadcast(actionPauseIntent)
             }
         }
         return START_NOT_STICKY

@@ -1,28 +1,18 @@
 package com.optimus.simpletimer.activities
 
-import android.accounts.AccountManagerCallback
-import android.app.ActivityManager
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.getSystemService
-import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
-import com.optimus.simpletimer.helpers.TimeUtil
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
-import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.recievers.TimerReceiver
 import com.optimus.simpletimer.services.TimerService
@@ -38,10 +28,12 @@ class MainActivity : AppCompatActivity(),
 
     companion object {
         private const val PROGRESS_BAR_MAX = "progress_bar_max"
+        private const val PROGRESS_BAR_PROGRESS = "progress_bar_progress"
         const val ACTION_START = "action_start"
         const val ACTION_PAUSE = "action_pause"
         const val ACTION_START_FOREGROUND = "action_start_foreground"
         const val ACTION_STOP_FOREGROUND = "action_stop_foreground"
+        private const val SPARE_SECOND = 999L
     }
 
     private lateinit var timerReceiver: TimerReceiver
@@ -49,7 +41,8 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
     private var timeInMilliseconds = 0L
-    private var maxValue = 0
+    private var progressMax = 0
+    private var progressValue = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,41 +54,37 @@ class MainActivity : AppCompatActivity(),
     override fun onStart() {
         super.onStart()
         initBroadcastReceiver()
-
-            val intent = Intent(this, TimerService::class.java)
-            intent.action = ACTION_STOP_FOREGROUND
-            startService(intent)
+        val intent = Intent(this, TimerService::class.java)
+        intent.action = ACTION_STOP_FOREGROUND
+        startService(intent)
 
     }
 
     override fun onStop() {
         super.onStop()
         unregisterReceiver(timerReceiver)
-        if (timerState==TimerState.STARTED) {
+        if (timerState == TimerState.STARTED) {
             val intent = Intent(this, TimerService::class.java)
             intent.action = ACTION_START_FOREGROUND
             startService(intent)
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.e("M_MainActivity", "onDestroy")
-    }
-
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        maxValue = savedInstanceState.getInt(PROGRESS_BAR_MAX)
-        progress_bar.max = maxValue
+        progressMax = savedInstanceState.getInt(PROGRESS_BAR_MAX)
+        progressValue = savedInstanceState.getInt(PROGRESS_BAR_PROGRESS)
+        progress_bar.max = progressMax
+        progress_bar.progress = progressValue
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt(PROGRESS_BAR_MAX, maxValue)
+        outState.putInt(PROGRESS_BAR_MAX, progressMax)
+        outState.putInt(PROGRESS_BAR_PROGRESS, progressValue)
     }
 
     private fun initViews() {
-        progress_bar.progress = 0
         val placeholder = resources.getString(R.string.time_placeholder)
         tv_timer_value.setOnClickListener {
             if (timerState == TimerState.STOPPED) {
@@ -132,14 +121,8 @@ class MainActivity : AppCompatActivity(),
     private fun startTimer() {
         val intent = Intent(this, TimerService::class.java)
         intent.action = ACTION_START
-        intent.putExtra(TimerService.EXTRA_MESSAGE_START,timeInMilliseconds)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            //startForegroundService(intent)
-            startService(intent)
-
-        } else {
-            startService(intent)
-        }
+        intent.putExtra(TimerService.EXTRA_MESSAGE_START, timeInMilliseconds)
+        startService(intent)
     }
 
     private fun pauseTimer() {
@@ -164,20 +147,23 @@ class MainActivity : AppCompatActivity(),
         mainViewModel.getTime().observe(this, Observer {
             tv_timer_value.text = it.first
             timeInMilliseconds = it.second
-            val progress = it.third
-            Log.e("M_MainActivity", "$timeInMilliseconds")
-            progress_bar.progress = progress-1000
+            updateProgress(timeInMilliseconds)
         })
 
     }
 
-    override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
-        mainViewModel.setupTimer(hours, minutes, seconds)
-        progress_bar.max = parseToMillis(hours, minutes, seconds).toInt()-1000
-        timeInMilliseconds = parseToMillis(hours, minutes, seconds)
-        Log.e("M_MainActivity", "max progress: ${progress_bar.max}")
+    private fun updateProgress(step: Long) {
+        progressValue = (step- SPARE_SECOND).toInt()
+        progress_bar.progress = progressValue
     }
 
+    override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
+        mainViewModel.setupTimer(hours, minutes, seconds)
+        timeInMilliseconds = parseToMillis(hours, minutes, seconds) +SPARE_SECOND
+        progressMax = timeInMilliseconds.toInt()
+        progress_bar.max = (progressMax - SPARE_SECOND).toInt()
+        progress_bar.progress = (progressMax - SPARE_SECOND).toInt()
+    }
 
     private fun updateButtons() {
         val icon = if (timerState == TimerState.STARTED) {
@@ -208,6 +194,7 @@ class MainActivity : AppCompatActivity(),
         val offset50 = resources.getDimension(R.dimen.toast_offset_50).toInt()
 
         val toast = Toast.makeText(this, message, Toast.LENGTH_SHORT)
+
         if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             toast.setGravity(Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM, 0, offset100)
         } else {

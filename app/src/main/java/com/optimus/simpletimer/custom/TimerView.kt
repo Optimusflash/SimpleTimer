@@ -1,7 +1,6 @@
-package com.optimus.simpletimer.helpers
+package com.optimus.simpletimer.custom
 
 import android.animation.ValueAnimator
-import android.animation.ValueAnimator.AnimatorUpdateListener
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.*
@@ -10,7 +9,6 @@ import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import com.optimus.simpletimer.R
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -76,7 +74,8 @@ class TimerView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
         mCanvas?.drawOval(mCircleInnerBounds!!, mEraserPaint)
         if (mCircleSweepAngle > 0) {
             Log.e("M_TimerView", "$mCircleSweepAngle")
-            mCanvas?.drawArc(mCircleOuterBounds!!,ARC_START_ANGLE.toFloat(),mCircleSweepAngle,true, mCirclePaint)
+            mCanvas?.drawArc(mCircleOuterBounds!!,
+                ARC_START_ANGLE.toFloat(),mCircleSweepAngle,true, mCirclePaint)
             mCanvas?.drawOval(mCircleInnerBounds!!, mEraserPaint)
         }
         canvas.drawBitmap(mBitmap!!, 0f, 0f, null)

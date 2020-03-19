@@ -17,42 +17,36 @@ import com.optimus.simpletimer.helpers.TimerState
 
 class MainViewModel : ViewModel() {
     private val timerState = MutableLiveData<TimerState>().default(TimerState.STOPPED)
-    private val time = MutableLiveData<Triple<String,Long,Int>>().default(Triple("00:00:00",0L,0))  //Time string, milliseconds, progress
+    private val time = MutableLiveData<Pair<String,Long>>().default(Pair("00:00:00",0L))  //Time string, milliseconds, progress
 
-    var tick = 0
-    private var tickCount = 0
-    // private var timeInMillis = 0L
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val timeString = parseHMStoString(hours, minutes, seconds)
         val timeInMillis = parseToMillis(hours, minutes, seconds)
-        time.set(Triple(timeString,timeInMillis,360))
-        tickCount = timeInMillis.toInt() / 10
-        tick = 360 / tickCount
+        time.set(Pair(timeString,timeInMillis))
     }
 
     fun getTimerState(): LiveData<TimerState> {
         return timerState
     }
 
-    fun getTime(): LiveData<Triple<String,Long,Int>> {
+    fun getTime(): LiveData<Pair<String,Long>> {
         return time
     }
-
 
     fun updateTime(milliseconds: Long, state: TimerState) {          //From BroadcastReceiver
         val timeString = parseMillisToString(milliseconds)
         when (state) {
             TimerState.STARTED -> {
-                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
+                time.set((Pair(timeString,milliseconds)))
                 timerState.set(TimerState.STARTED)
             }
             TimerState.PAUSED -> {
-                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
+                time.set((Pair(timeString,milliseconds)))
                 timerState.set(TimerState.PAUSED)
             }
             TimerState.STOPPED -> {
-                time.set((Triple(timeString,milliseconds, milliseconds.toInt())))
+                time.set((Pair(timeString,milliseconds)))
                 timerState.set(TimerState.STOPPED)
             }
         }
