@@ -4,11 +4,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
@@ -27,8 +29,6 @@ class MainActivity : AppCompatActivity(),
     TimerDialogFragment.OnTimeChangeListener {
 
     companion object {
-        private const val PROGRESS_BAR_MAX = "progress_bar_max"
-        private const val PROGRESS_BAR_PROGRESS = "progress_bar_progress"
         const val ACTION_START = "action_start"
         const val ACTION_PAUSE = "action_pause"
         const val ACTION_START_FOREGROUND = "action_start_foreground"
@@ -41,8 +41,6 @@ class MainActivity : AppCompatActivity(),
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
     private var timeInMilliseconds = 0L
-    private var progressMax = 0
-    private var progressValue = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,35 +51,24 @@ class MainActivity : AppCompatActivity(),
 
     override fun onStart() {
         super.onStart()
+        Log.e("M_MainActivity", "onStart")
+        mainViewModel.getData() //TODO load data
         initBroadcastReceiver()
         val intent = Intent(this, TimerService::class.java)
         intent.action = ACTION_STOP_FOREGROUND
         startService(intent)
-
     }
 
     override fun onStop() {
         super.onStop()
+        Log.e("M_MainActivity", "onStop")
+        mainViewModel.saveData()              //TODO save data
         unregisterReceiver(timerReceiver)
         if (timerState == TimerState.STARTED) {
             val intent = Intent(this, TimerService::class.java)
             intent.action = ACTION_START_FOREGROUND
             startService(intent)
         }
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        progressMax = savedInstanceState.getInt(PROGRESS_BAR_MAX)
-        progressValue = savedInstanceState.getInt(PROGRESS_BAR_PROGRESS)
-        progress_bar.max = progressMax
-        progress_bar.progress = progressValue
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt(PROGRESS_BAR_MAX, progressMax)
-        outState.putInt(PROGRESS_BAR_PROGRESS, progressValue)
     }
 
     private fun initViews() {
@@ -137,11 +124,15 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun initViewModel() {
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
         mainViewModel.getTimerState().observe(this, Observer {
             timerState = it
             updateButtons()
+        })
+
+        mainViewModel.getProgressMax().observe(this, Observer {
+            progress_bar.max = (it - SPARE_SECOND).toInt()
         })
 
         mainViewModel.getTime().observe(this, Observer {
@@ -149,20 +140,18 @@ class MainActivity : AppCompatActivity(),
             timeInMilliseconds = it.second
             updateProgress(timeInMilliseconds)
         })
-
     }
 
     private fun updateProgress(step: Long) {
-        progressValue = (step- SPARE_SECOND).toInt()
+        val progressValue = (step- SPARE_SECOND).toInt()
         progress_bar.progress = progressValue
     }
 
     override fun onTimeSet(hours: Int, minutes: Int, seconds: Int) {
         mainViewModel.setupTimer(hours, minutes, seconds)
         timeInMilliseconds = parseToMillis(hours, minutes, seconds) +SPARE_SECOND
-        progressMax = timeInMilliseconds.toInt()
-        progress_bar.max = (progressMax - SPARE_SECOND).toInt()
-        progress_bar.progress = (progressMax - SPARE_SECOND).toInt()
+        mainViewModel.setProgressMax(timeInMilliseconds.toInt())
+        progress_bar.progress = (timeInMilliseconds.toInt() - SPARE_SECOND).toInt()
     }
 
     private fun updateButtons() {
