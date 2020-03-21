@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.optimus.simpletimer.R
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private lateinit var timerReceiver: TimerReceiver
+    private lateinit var localBroadcastManager: LocalBroadcastManager
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
@@ -52,7 +54,7 @@ class MainActivity : AppCompatActivity(),
     override fun onStart() {
         super.onStart()
         Log.e("M_MainActivity", "onStart")
-        mainViewModel.getData() //TODO load data
+        mainViewModel.getData()
         initBroadcastReceiver()
         val intent = Intent(this, TimerService::class.java)
         intent.action = ACTION_STOP_FOREGROUND
@@ -62,8 +64,8 @@ class MainActivity : AppCompatActivity(),
     override fun onStop() {
         super.onStop()
         Log.e("M_MainActivity", "onStop")
-        mainViewModel.saveData()              //TODO save data
-        unregisterReceiver(timerReceiver)
+        mainViewModel.saveData()
+        localBroadcastManager.unregisterReceiver(timerReceiver)
         if (timerState == TimerState.STARTED) {
             val intent = Intent(this, TimerService::class.java)
             intent.action = ACTION_START_FOREGROUND
@@ -97,12 +99,13 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun initBroadcastReceiver() {
+        localBroadcastManager = LocalBroadcastManager.getInstance(this)
         timerReceiver = TimerReceiver(mainViewModel::updateTime)
         val filter = IntentFilter()
         filter.addAction(BROADCAST_ACTION_START)
         filter.addAction(BROADCAST_ACTION_STOP)
         filter.addAction(BROADCAST_ACTION_PAUSE)
-        registerReceiver(timerReceiver, filter)
+        localBroadcastManager.registerReceiver(timerReceiver, filter)
     }
 
     private fun startTimer() {

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.optimus.simpletimer.activities.MainActivity
 import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.model.TimerData
@@ -18,12 +19,18 @@ class TimerService : Service() {
     private var timer: CountDownTimer? = null
     private var timeInMillis = 0L
     private val timerRepository = MainRepository()
+    private lateinit var localBroadcastManager: LocalBroadcastManager
 
     companion object {
         const val EXTRA_MESSAGE_START = "extra_message_start"
         const val BROADCAST_ACTION_START = "com.optimus.simpletimer.broadcast_action_start"
         const val BROADCAST_ACTION_STOP = "com.optimus.simpletimer.broadcast_action_stop"
         const val BROADCAST_ACTION_PAUSE = "com.optimus.simpletimer.broadcast_action_pause"
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        localBroadcastManager = LocalBroadcastManager.getInstance(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -38,7 +45,7 @@ class TimerService : Service() {
                             TimerReceiver.MILLISECONDS_EXTRA_START,
                             millisUntilFinished
                         )
-                        sendBroadcast(actionStartIntent)
+                        localBroadcastManager.sendBroadcast(actionStartIntent)
                         if (timeInMillis < 1000) {
                             this.onFinish()
 
@@ -54,7 +61,7 @@ class TimerService : Service() {
             if (it.action == MainActivity.ACTION_PAUSE) {
                 timer?.cancel()
                 val actionPauseIntent = Intent(BROADCAST_ACTION_PAUSE)
-                sendBroadcast(actionPauseIntent)
+                localBroadcastManager.sendBroadcast(actionPauseIntent)
             }
             if (it.action == MainActivity.ACTION_START_FOREGROUND) {
                 startForeground(
@@ -78,7 +85,7 @@ class TimerService : Service() {
         timer?.cancel()
         val actionStopIntent = Intent()
         actionStopIntent.action = BROADCAST_ACTION_STOP
-        sendBroadcast(actionStopIntent)
+        localBroadcastManager.sendBroadcast(actionStopIntent)
         val subscribe = timerRepository.updateData(TimerData(1, 2, 0, 0, 0))
             .subscribe {
                 Log.e("M_TimerService", "triggered")
