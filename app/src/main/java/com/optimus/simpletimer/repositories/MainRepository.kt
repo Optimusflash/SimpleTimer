@@ -1,20 +1,26 @@
 package com.optimus.simpletimer.repositories
 
 import android.util.Log
-import com.optimus.simpletimer.App
+import com.optimus.simpletimer.database.TimerDao
+import com.optimus.simpletimer.di.App
 import com.optimus.simpletimer.model.TimerData
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import javax.inject.Inject
 
 /**
  * Created by Dmitriy Chebotar on 20.03.2020.
  */
 
 class MainRepository {
+    @Inject
+    lateinit var timerDao: TimerDao
 
-    private val timerDao = App.getDatabase().timerDao()
+    init {
+        App.component.inject(this)
+    }
 
     fun updateData(timerData: TimerData): Completable {
         Log.e("M_MainRepository", "triggered")

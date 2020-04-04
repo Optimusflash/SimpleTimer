@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.optimus.simpletimer.di.App
 import com.optimus.simpletimer.extensions.default
 import com.optimus.simpletimer.extensions.set
 import com.optimus.simpletimer.helpers.TimeUtil.parseHMStoString
@@ -13,6 +14,7 @@ import com.optimus.simpletimer.helpers.TimerState
 import com.optimus.simpletimer.model.TimerData
 import com.optimus.simpletimer.repositories.MainRepository
 import io.reactivex.disposables.CompositeDisposable
+import javax.inject.Inject
 
 
 /**
@@ -20,12 +22,16 @@ import io.reactivex.disposables.CompositeDisposable
  */
 
 class MainViewModel : ViewModel() {
-    private val mainRepository = MainRepository()
+    @Inject
+    lateinit var mainRepository: MainRepository
     private val timerState = MutableLiveData<TimerState>().default(TimerState.STOPPED)
     private val time = MutableLiveData<Pair<String, Long>>().default(Pair("00:00:00", 0L))  //Time string, milliseconds
     private var progressMax = MutableLiveData<Int>().default(0)
-
     private val disposeBag = CompositeDisposable()
+
+    init {
+        App.component.inject(this)
+    }
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val timeString = parseHMStoString(hours, minutes, seconds)

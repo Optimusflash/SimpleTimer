@@ -7,18 +7,24 @@ import android.os.IBinder
 import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.optimus.simpletimer.activities.MainActivity
+import com.optimus.simpletimer.di.App
 import com.optimus.simpletimer.helpers.TimerNotification
 import com.optimus.simpletimer.model.TimerData
 import com.optimus.simpletimer.recievers.TimerReceiver
 import com.optimus.simpletimer.repositories.MainRepository
+import javax.inject.Inject
 
 /**
  * Created by Dmitriy Chebotar on 18.02.2020.
  */
 class TimerService : Service() {
+    @Inject
+    lateinit var timerNotification: TimerNotification
+    @Inject
+    lateinit var timerRepository: MainRepository
+
     private var timer: CountDownTimer? = null
     private var timeInMillis = 0L
-    private val timerRepository = MainRepository()
     private lateinit var localBroadcastManager: LocalBroadcastManager
 
     companion object {
@@ -26,6 +32,10 @@ class TimerService : Service() {
         const val BROADCAST_ACTION_START = "com.optimus.simpletimer.broadcast_action_start"
         const val BROADCAST_ACTION_STOP = "com.optimus.simpletimer.broadcast_action_stop"
         const val BROADCAST_ACTION_PAUSE = "com.optimus.simpletimer.broadcast_action_pause"
+    }
+
+    init {
+        App.component.inject(this)
     }
 
     override fun onCreate() {
@@ -66,7 +76,7 @@ class TimerService : Service() {
             if (it.action == MainActivity.ACTION_START_FOREGROUND) {
                 startForeground(
                     TimerNotification.NOTIFICATION_ID,
-                    TimerNotification.getNotification(this)
+                    timerNotification.getNotification(this)
                 )
             }
             if (it.action == MainActivity.ACTION_STOP_FOREGROUND) {
