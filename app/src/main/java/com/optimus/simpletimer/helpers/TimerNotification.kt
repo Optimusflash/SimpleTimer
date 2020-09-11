@@ -18,19 +18,13 @@ import javax.inject.Inject
  * Created by Dmitriy Chebotar on 08.03.2020.
  */
 
-class TimerNotification {
-    @Inject
-    lateinit var notificationChannel: NotificationChannel
-
-    @Inject
-    lateinit var notificationManager: NotificationManager
+class TimerNotification @Inject constructor(private val notificationChannel: NotificationChannel, private val notificationManager: NotificationManager) {
 
     companion object {
         const val NOTIFICATION_ID = 121212
     }
 
     init {
-        App.component.inject(this)
         createNotificationChanel()
     }
 

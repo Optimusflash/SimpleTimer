@@ -21,17 +21,12 @@ import javax.inject.Inject
  * Created by Dmitriy Chebotar on 16.02.2020.
  */
 
-class MainViewModel : ViewModel() {
-    @Inject
-    lateinit var mainRepository: MainRepository
+class MainViewModel @Inject constructor(private val mainRepository: MainRepository) : ViewModel() {
+
     private val timerState = MutableLiveData<TimerState>().default(TimerState.STOPPED)
     private val time = MutableLiveData<Pair<String, Long>>().default(Pair("00:00:00", 0L))  //Time string, milliseconds
     private var progressMax = MutableLiveData<Int>().default(0)
     private val disposeBag = CompositeDisposable()
-
-    init {
-        App.component.inject(this)
-    }
 
     fun setupTimer(hours: Int, minutes: Int, seconds: Int) {
         val timeString = parseHMStoString(hours, minutes, seconds)
@@ -110,5 +105,10 @@ class MainViewModel : ViewModel() {
 
     fun setProgressMax(progressMax: Int) {
         this.progressMax.set(progressMax)
+    }
+
+    override fun onCleared() {
+        disposeBag.dispose()
+        super.onCleared()
     }
 }

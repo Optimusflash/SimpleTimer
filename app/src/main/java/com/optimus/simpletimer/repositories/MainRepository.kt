@@ -14,13 +14,7 @@ import javax.inject.Inject
  * Created by Dmitriy Chebotar on 20.03.2020.
  */
 
-class MainRepository {
-    @Inject
-    lateinit var timerDao: TimerDao
-
-    init {
-        App.component.inject(this)
-    }
+class MainRepository @Inject constructor(private val timerDao: TimerDao) {
 
     fun updateData(timerData: TimerData): Completable {
         Log.e("M_MainRepository", "triggered")

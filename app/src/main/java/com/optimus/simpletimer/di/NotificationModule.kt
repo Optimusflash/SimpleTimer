@@ -36,12 +36,4 @@ class NotificationModule() {
     fun provideNotificationManager(context: Context): NotificationManager {
         return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
-
-
-    @Provides
-    @Singleton
-    fun provideTimerNotification(): TimerNotification{
-        return TimerNotification()
-    }
-
 }

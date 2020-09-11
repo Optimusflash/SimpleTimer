@@ -18,15 +18,7 @@ class StorageModule(private val appContext: Context) {
 
     @Provides
     @Singleton
-    fun provideAppContext(): Context {
-        return appContext
-    }
-
-    @Provides
-    @Singleton
-    fun provideRepository(): MainRepository {
-        return MainRepository()
-    }
+    fun provideAppContext() = appContext
 
     @Provides
     @Singleton

@@ -96,10 +96,11 @@ class TimerService : Service() {
         val actionStopIntent = Intent()
         actionStopIntent.action = BROADCAST_ACTION_STOP
         localBroadcastManager.sendBroadcast(actionStopIntent)
-        val subscribe = timerRepository.updateData(TimerData(1, 2, 0, 0, 0))
+        val disposable = timerRepository.updateData(TimerData(1, 2, 0, 0, 0))
             .subscribe {
                 Log.e("M_TimerService", "triggered")
             }
+        disposable.dispose()
         super.onDestroy()
     }
 }

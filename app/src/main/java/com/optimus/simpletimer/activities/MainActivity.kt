@@ -13,6 +13,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.optimus.simpletimer.R
+import com.optimus.simpletimer.di.App
+import com.optimus.simpletimer.di.ViewModelFactory
 import com.optimus.simpletimer.fragments.TimerDialogFragment
 import com.optimus.simpletimer.helpers.TimeUtil.parseToMillis
 import com.optimus.simpletimer.helpers.TimerState
@@ -23,6 +25,7 @@ import com.optimus.simpletimer.services.TimerService.Companion.BROADCAST_ACTION_
 import com.optimus.simpletimer.services.TimerService.Companion.BROADCAST_ACTION_STOP
 import com.optimus.simpletimer.viewmodels.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import javax.inject.Inject
 
 
 class MainActivity : AppCompatActivity(),
@@ -39,6 +42,8 @@ class MainActivity : AppCompatActivity(),
     private lateinit var timerReceiver: TimerReceiver
     private lateinit var localBroadcastManager: LocalBroadcastManager
 
+    @Inject
+    lateinit var viewModelFactory: ViewModelFactory
     private lateinit var mainViewModel: MainViewModel
     private lateinit var timerState: TimerState
     private var timeInMilliseconds = 0L
@@ -46,8 +51,13 @@ class MainActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        initDagger()
         initViews()
         initViewModel()
+    }
+
+    private fun initDagger() {
+        App.component.inject(this)
     }
 
     override fun onStart() {
@@ -126,8 +136,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun initViewModel() {
-        mainViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-
+        mainViewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
         mainViewModel.getTimerState().observe(this, Observer {
             timerState = it
             updateButtons()

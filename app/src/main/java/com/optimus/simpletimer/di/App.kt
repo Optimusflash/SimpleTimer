@@ -20,12 +20,6 @@ class App : Application() {
         lateinit var component: AppComponent
     }
 
-    @Inject
-    lateinit var notificationManager: NotificationManager
-
-    @Inject
-    lateinit var notificationChannel: NotificationChannel
-
     override fun onCreate() {
         super.onCreate()
         Stetho.initializeWithDefaults(this)
@@ -38,6 +32,5 @@ class App : Application() {
             .notificationModule(NotificationModule())
             .storageModule(StorageModule(this))
             .build()
-        component.inject(this)
     }
 }
