@@ -108,7 +108,7 @@ class MainViewModel @Inject constructor(private val mainRepository: MainReposito
     }
 
     override fun onCleared() {
-        disposeBag.dispose()
+        disposeBag.clear()
         super.onCleared()
     }
 }
